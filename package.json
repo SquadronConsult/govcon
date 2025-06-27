@@ -1,0 +1,27 @@
+{
+  "name": "bureaucratic-mountains",
+  "version": "1.0.0",
+  "description": "A satirical defense acquisition board game parody of Chutes and Ladders",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . -l 3000"
+  },
+  "keywords": [
+    "game",
+    "board-game",
+    "defense",
+    "satire",
+    "web-game",
+    "pwa"
+  ],
+  "author": "Defense Acquisition Satire Division",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/18bravo/mountains.git"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}
