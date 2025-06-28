@@ -195,7 +195,7 @@ function addSpecialConnections() {
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
     svg.appendChild(defs);
     
-    // Create mountain gradient
+    // Create mountain gradient - blue to light blue to white
     const mountainGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
     mountainGradient.setAttribute('id', 'mountainGradient');
     mountainGradient.setAttribute('x1', '0%');
@@ -205,19 +205,24 @@ function addSpecialConnections() {
     
     const mStop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     mStop1.setAttribute('offset', '0%');
-    mStop1.setAttribute('style', 'stop-color:#2e7d32;stop-opacity:0.8');
+    mStop1.setAttribute('style', 'stop-color:#1565C0;stop-opacity:0.9');
     
     const mStop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    mStop2.setAttribute('offset', '60%');
-    mStop2.setAttribute('style', 'stop-color:#388e3c;stop-opacity:0.7');
+    mStop2.setAttribute('offset', '50%');
+    mStop2.setAttribute('style', 'stop-color:#42A5F5;stop-opacity:0.8');
     
     const mStop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    mStop3.setAttribute('offset', '100%');
-    mStop3.setAttribute('style', 'stop-color:#81c784;stop-opacity:0.6');
+    mStop3.setAttribute('offset', '75%');
+    mStop3.setAttribute('style', 'stop-color:#90CAF9;stop-opacity:0.7');
+    
+    const mStop4 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    mStop4.setAttribute('offset', '100%');
+    mStop4.setAttribute('style', 'stop-color:#ffffff;stop-opacity:0.9');
     
     mountainGradient.appendChild(mStop1);
     mountainGradient.appendChild(mStop2);
     mountainGradient.appendChild(mStop3);
+    mountainGradient.appendChild(mStop4);
     defs.appendChild(mountainGradient);
     
     // Create valley gradient
@@ -289,255 +294,59 @@ function drawMountainPath(svg, fromSquare, toSquare, boardRect) {
     
     // Create group for mountain
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('opacity', '0.9');
+    g.setAttribute('opacity', '0.85');
     
     // Calculate mountain shape
     const midX = (fromX + toX) / 2;
     const midY = (fromY + toY) / 2;
     const angle = Math.atan2(toY - fromY, toX - fromX);
     const perpAngle = angle - Math.PI / 2;
-    const pathWidth = 40;
+    const pathWidth = 35;
     
-    // Create unique gradient for this mountain
-    const gradientId = `mountainGrad${fromSquare.id}`;
-    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-    gradient.setAttribute('id', gradientId);
-    gradient.setAttribute('x1', '0%');
-    gradient.setAttribute('y1', '100%');
-    gradient.setAttribute('x2', '0%');
-    gradient.setAttribute('y2', '0%');
+    // Create clean mountain silhouette
+    const mountain = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     
-    // Multiple gradient stops for realistic rock layers
-    const stops = [
-        { offset: '0%', color: '#3e2723', opacity: '0.9' },
-        { offset: '20%', color: '#4e342e', opacity: '0.85' },
-        { offset: '35%', color: '#5d4037', opacity: '0.8' },
-        { offset: '50%', color: '#6d4c41', opacity: '0.75' },
-        { offset: '65%', color: '#795548', opacity: '0.7' },
-        { offset: '80%', color: '#8d6e63', opacity: '0.65' },
-        { offset: '90%', color: '#a1887f', opacity: '0.6' },
-        { offset: '100%', color: '#bcaaa4', opacity: '0.5' }
-    ];
+    // Calculate peak point
+    const peakX = midX + Math.cos(perpAngle) * pathWidth * 0.8;
+    const peakY = midY + Math.sin(perpAngle) * pathWidth * 0.8 - 20;
     
-    stops.forEach(stop => {
-        const stopEl = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stopEl.setAttribute('offset', stop.offset);
-        stopEl.setAttribute('style', `stop-color:${stop.color};stop-opacity:${stop.opacity}`);
-        gradient.appendChild(stopEl);
-    });
-    
-    svg.querySelector('defs').appendChild(gradient);
-    
-    // Create multiple rock layers for the mountain
-    const layers = [];
-    
-    // Base rock layer
-    const baseLayer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const basePath = createMountainLayer(fromX, fromY, toX, toY, midX, midY, perpAngle, pathWidth * 1.2, 0);
-    baseLayer.setAttribute('d', basePath);
-    baseLayer.setAttribute('fill', '#3e2723');
-    baseLayer.setAttribute('opacity', '0.3');
-    layers.push(baseLayer);
-    
-    // Middle rock layers with varying textures
-    for (let i = 0; i < 3; i++) {
-        const layer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const layerPath = createMountainLayer(
-            fromX, fromY, toX, toY, midX, midY, perpAngle, 
-            pathWidth * (1 - i * 0.15), 
-            i * 5
-        );
-        layer.setAttribute('d', layerPath);
-        layer.setAttribute('fill', `url(#${gradientId})`);
-        layer.setAttribute('opacity', 0.7 - i * 0.1);
-        layers.push(layer);
-    }
-    
-    // Main mountain face with detailed ridges
-    const mainFace = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const facePath = createDetailedMountainFace(fromX, fromY, toX, toY, midX, midY, perpAngle, pathWidth);
-    mainFace.setAttribute('d', facePath);
-    mainFace.setAttribute('fill', `url(#${gradientId})`);
-    mainFace.setAttribute('stroke', '#4e342e');
-    mainFace.setAttribute('stroke-width', '0.5');
-    
-    // Rock strata lines
-    for (let i = 0; i < 5; i++) {
-        const strata = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const t = 0.2 + i * 0.15;
-        const strataY = fromY + (toY - fromY) * t;
-        const strataX = fromX + (toX - fromX) * t;
-        const strataPath = `
-            M ${strataX},${strataY}
-            Q ${strataX + Math.cos(perpAngle) * pathWidth * 0.3},${strataY + Math.sin(perpAngle) * pathWidth * 0.3 + Math.sin(i) * 3}
-              ${strataX + Math.cos(perpAngle) * pathWidth * 0.6},${strataY + Math.sin(perpAngle) * pathWidth * 0.6}
-        `;
-        strata.setAttribute('d', strataPath);
-        strata.setAttribute('stroke', '#5d4037');
-        strata.setAttribute('stroke-width', '0.5');
-        strata.setAttribute('fill', 'none');
-        strata.setAttribute('opacity', '0.4');
-        g.appendChild(strata);
-    }
-    
-    // Add all layers
-    layers.forEach(layer => g.appendChild(layer));
-    g.appendChild(mainFace);
-    
-    // Detailed snow cap with irregular edges
-    const snowGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    
-    // Calculate peak area
-    const peakX = midX + Math.cos(perpAngle) * pathWidth * 0.4;
-    const peakY = midY + Math.sin(perpAngle) * pathWidth * 0.4 - 30;
-    
-    // Main snow cap
-    const snowCap = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const snowPath = createIrregularSnowCap(peakX, peakY, perpAngle, pathWidth);
-    snowCap.setAttribute('d', snowPath);
-    snowCap.setAttribute('fill', 'rgba(255, 255, 255, 0.9)');
-    snowCap.setAttribute('stroke', 'rgba(220, 220, 255, 0.5)');
-    snowCap.setAttribute('stroke-width', '0.5');
-    
-    // Snow shadows
-    const snowShadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const shadowPath = `
-        M ${peakX - 8},${peakY + 10}
-        Q ${peakX - 3},${peakY + 8} ${peakX + 2},${peakY + 12}
-        L ${peakX - 2},${peakY + 15}
+    // Create simple mountain shape with clean edges
+    const mountainPath = `
+        M ${fromX},${fromY}
+        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.3},${fromY + Math.sin(perpAngle) * pathWidth * 0.3}
+        L ${midX - (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY - (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
+        L ${peakX},${peakY}
+        L ${midX + (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY + (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
+        L ${toX + Math.cos(perpAngle) * pathWidth * 0.3},${toY + Math.sin(perpAngle) * pathWidth * 0.3}
+        L ${toX},${toY}
         Z
     `;
-    snowShadow.setAttribute('d', shadowPath);
-    snowShadow.setAttribute('fill', 'rgba(200, 200, 255, 0.3)');
     
-    snowGroup.appendChild(snowShadow);
-    snowGroup.appendChild(snowCap);
+    mountain.setAttribute('d', mountainPath);
+    mountain.setAttribute('fill', 'url(#mountainGradient)');
+    mountain.setAttribute('stroke', '#1565C0');
+    mountain.setAttribute('stroke-width', '1');
+    mountain.setAttribute('stroke-opacity', '0.5');
     
-    // Add rock debris at base
-    for (let i = 0; i < 8; i++) {
-        const debris = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        const t = Math.random();
-        const debrisX = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 10;
-        const debrisY = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 10;
-        const size = 2 + Math.random() * 3;
-        
-        const points = createRockShape(debrisX, debrisY, size);
-        debris.setAttribute('points', points);
-        debris.setAttribute('fill', '#5d4037');
-        debris.setAttribute('opacity', '0.6');
-        g.appendChild(debris);
-    }
+    g.appendChild(mountain);
     
-    g.appendChild(snowGroup);
+    // Add subtle ridge line
+    const ridge = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const ridgePath = `
+        M ${fromX},${fromY}
+        L ${peakX},${peakY}
+        L ${toX},${toY}
+    `;
+    ridge.setAttribute('d', ridgePath);
+    ridge.setAttribute('stroke', 'rgba(255, 255, 255, 0.3)');
+    ridge.setAttribute('stroke-width', '1');
+    ridge.setAttribute('fill', 'none');
+    
+    g.appendChild(ridge);
+    
     svg.appendChild(g);
 }
 
-// Helper function to create mountain layer paths
-function createMountainLayer(fromX, fromY, toX, toY, midX, midY, perpAngle, width, offset) {
-    const points = [];
-    const segments = 8;
-    
-    points.push(`M ${fromX},${fromY}`);
-    
-    for (let i = 0; i <= segments; i++) {
-        const t = i / segments;
-        const x = fromX + (toX - fromX) * t;
-        const y = fromY + (toY - fromY) * t;
-        const variation = Math.sin(t * Math.PI * 3 + offset) * 5;
-        const height = Math.sin(t * Math.PI) * width;
-        
-        const px = x + Math.cos(perpAngle) * (height + variation);
-        const py = y + Math.sin(perpAngle) * (height + variation);
-        
-        if (i === 0) {
-            points.push(`L ${px},${py}`);
-        } else {
-            const cx = x + Math.cos(perpAngle) * (height + variation * 0.5);
-            const cy = y + Math.sin(perpAngle) * (height + variation * 0.5);
-            points.push(`Q ${cx},${cy} ${px},${py}`);
-        }
-    }
-    
-    points.push(`L ${toX},${toY} Z`);
-    return points.join(' ');
-}
-
-// Helper function to create detailed mountain face
-function createDetailedMountainFace(fromX, fromY, toX, toY, midX, midY, perpAngle, width) {
-    const path = [];
-    path.push(`M ${fromX},${fromY}`);
-    
-    // Create jagged mountain edge with multiple peaks
-    const ridges = [
-        { t: 0.15, h: 0.7, v: 5 },
-        { t: 0.25, h: 0.85, v: 8 },
-        { t: 0.4, h: 0.95, v: 12 },
-        { t: 0.5, h: 1, v: 15 },
-        { t: 0.6, h: 0.95, v: 12 },
-        { t: 0.75, h: 0.8, v: 7 },
-        { t: 0.85, h: 0.65, v: 3 }
-    ];
-    
-    ridges.forEach((ridge, i) => {
-        const x = fromX + (toX - fromX) * ridge.t;
-        const y = fromY + (toY - fromY) * ridge.t;
-        const ridgeX = x + Math.cos(perpAngle) * width * ridge.h;
-        const ridgeY = y + Math.sin(perpAngle) * width * ridge.h - ridge.v;
-        
-        if (i === 0) {
-            path.push(`L ${ridgeX},${ridgeY}`);
-        } else {
-            const prevRidge = ridges[i - 1];
-            const prevX = fromX + (toX - fromX) * prevRidge.t;
-            const prevY = fromY + (toY - fromY) * prevRidge.t;
-            const cpX = (prevX + x) / 2 + Math.cos(perpAngle) * width * ((prevRidge.h + ridge.h) / 2);
-            const cpY = (prevY + y) / 2 + Math.sin(perpAngle) * width * ((prevRidge.h + ridge.h) / 2);
-            
-            path.push(`Q ${cpX},${cpY} ${ridgeX},${ridgeY}`);
-        }
-    });
-    
-    path.push(`L ${toX},${toY} Z`);
-    return path.join(' ');
-}
-
-// Helper function to create irregular snow cap
-function createIrregularSnowCap(peakX, peakY, perpAngle, width) {
-    const points = [];
-    const segments = 12;
-    
-    for (let i = 0; i <= segments; i++) {
-        const angle = (i / segments) * Math.PI * 2;
-        const radius = 15 + Math.sin(angle * 3) * 5 + Math.cos(angle * 5) * 3;
-        const x = peakX + Math.cos(angle) * radius;
-        const y = peakY + Math.sin(angle) * radius * 0.6;
-        
-        if (i === 0) {
-            points.push(`M ${x},${y}`);
-        } else {
-            points.push(`L ${x},${y}`);
-        }
-    }
-    
-    points.push('Z');
-    return points.join(' ');
-}
-
-// Helper function to create rock shapes
-function createRockShape(centerX, centerY, size) {
-    const points = [];
-    const vertices = 5 + Math.floor(Math.random() * 3);
-    
-    for (let i = 0; i < vertices; i++) {
-        const angle = (i / vertices) * Math.PI * 2;
-        const radius = size * (0.7 + Math.random() * 0.3);
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-        points.push(`${x},${y}`);
-    }
-    
-    return points.join(' ');
-}
 
 // Draw valley path
 function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
@@ -551,297 +360,77 @@ function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
     
     // Create group for valley
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('opacity', '0.9');
+    g.setAttribute('opacity', '0.85');
     
     // Calculate valley shape
     const midX = (fromX + toX) / 2;
     const midY = (fromY + toY) / 2;
     const angle = Math.atan2(toY - fromY, toX - fromX);
     const perpAngle = angle + Math.PI / 2;
-    const pathWidth = 45;
+    const pathWidth = 35;
     
-    // Create unique gradient for this valley
-    const gradientId = `valleyGrad${fromSquare.id}`;
-    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-    gradient.setAttribute('id', gradientId);
-    gradient.setAttribute('x1', '0%');
-    gradient.setAttribute('y1', '0%');
-    gradient.setAttribute('x2', '0%');
-    gradient.setAttribute('y2', '100%');
+    // Create clean valley/canyon shape
+    const valley = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     
-    // Canyon gradient with sedimentary layers
-    const canyonStops = [
-        { offset: '0%', color: '#d4a373', opacity: '0.6' },
-        { offset: '15%', color: '#c2956a', opacity: '0.65' },
-        { offset: '25%', color: '#b08968', opacity: '0.7' },
-        { offset: '35%', color: '#9e7c65', opacity: '0.75' },
-        { offset: '45%', color: '#8b6f47', opacity: '0.8' },
-        { offset: '55%', color: '#795548', opacity: '0.85' },
-        { offset: '70%', color: '#6d4c41', opacity: '0.9' },
-        { offset: '85%', color: '#5d4037', opacity: '0.95' },
-        { offset: '100%', color: '#3e2723', opacity: '1' }
-    ];
+    // Calculate canyon depth point
+    const canyonX = midX + Math.cos(perpAngle) * pathWidth * 0.8;
+    const canyonY = midY + Math.sin(perpAngle) * pathWidth * 0.8 + 15;
     
-    canyonStops.forEach(stop => {
-        const stopEl = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-        stopEl.setAttribute('offset', stop.offset);
-        stopEl.setAttribute('style', `stop-color:${stop.color};stop-opacity:${stop.opacity}`);
-        gradient.appendChild(stopEl);
-    });
+    // Create simple canyon shape with clean edges
+    const valleyPath = `
+        M ${fromX},${fromY}
+        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.3},${fromY + Math.sin(perpAngle) * pathWidth * 0.3}
+        L ${midX - (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY - (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
+        L ${canyonX},${canyonY}
+        L ${midX + (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY + (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
+        L ${toX + Math.cos(perpAngle) * pathWidth * 0.3},${toY + Math.sin(perpAngle) * pathWidth * 0.3}
+        L ${toX},${toY}
+        Z
+    `;
     
-    svg.querySelector('defs').appendChild(gradient);
+    valley.setAttribute('d', valleyPath);
+    valley.setAttribute('fill', 'url(#valleyGradient)');
+    valley.setAttribute('stroke', '#5d4037');
+    valley.setAttribute('stroke-width', '1');
+    valley.setAttribute('stroke-opacity', '0.5');
     
-    // Create shadow gradient
-    const shadowGradientId = `valleyShadow${fromSquare.id}`;
-    const shadowGradient = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
-    shadowGradient.setAttribute('id', shadowGradientId);
+    g.appendChild(valley);
     
-    const shadowStop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    shadowStop1.setAttribute('offset', '0%');
-    shadowStop1.setAttribute('style', 'stop-color:#000000;stop-opacity:0.6');
-    
-    const shadowStop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-    shadowStop2.setAttribute('offset', '100%');
-    shadowStop2.setAttribute('style', 'stop-color:#000000;stop-opacity:0');
-    
-    shadowGradient.appendChild(shadowStop1);
-    shadowGradient.appendChild(shadowStop2);
-    svg.querySelector('defs').appendChild(shadowGradient);
-    
-    // Create multiple canyon wall layers
-    const layers = [];
-    
-    // Outer erosion layer
-    const erosionLayer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const erosionPath = createCanyonLayer(fromX, fromY, toX, toY, midX, midY, perpAngle, pathWidth * 1.3, 0, true);
-    erosionLayer.setAttribute('d', erosionPath);
-    erosionLayer.setAttribute('fill', '#8d6e63');
-    erosionLayer.setAttribute('opacity', '0.3');
-    layers.push(erosionLayer);
-    
-    // Multiple sedimentary layers
-    for (let i = 0; i < 4; i++) {
-        const layer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const layerPath = createCanyonLayer(
-            fromX, fromY, toX, toY, midX, midY, perpAngle,
-            pathWidth * (1.2 - i * 0.1),
-            i * 3,
-            false
-        );
-        layer.setAttribute('d', layerPath);
-        layer.setAttribute('fill', `url(#${gradientId})`);
-        layer.setAttribute('opacity', 0.8 - i * 0.1);
-        layers.push(layer);
-    }
-    
-    // Main canyon face with detailed walls
-    const mainCanyon = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const canyonPath = createDetailedCanyonWall(fromX, fromY, toX, toY, midX, midY, perpAngle, pathWidth);
-    mainCanyon.setAttribute('d', canyonPath);
-    mainCanyon.setAttribute('fill', `url(#${gradientId})`);
-    mainCanyon.setAttribute('stroke', '#3e2723');
-    mainCanyon.setAttribute('stroke-width', '0.5');
-    
-    // Add all base layers
-    layers.forEach(layer => g.appendChild(layer));
-    
-    // Sedimentary rock strata lines
-    for (let i = 0; i < 8; i++) {
+    // Add subtle sedimentary lines
+    for (let i = 0; i < 3; i++) {
         const strata = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const t = 0.1 + i * 0.11;
+        const t = 0.3 + i * 0.2;
         const strataY = fromY + (toY - fromY) * t;
         const strataX = fromX + (toX - fromX) * t;
         
-        // Create wavy strata lines
-        const wave = Math.sin(i * 0.8) * 3;
         const strataPath = `
-            M ${strataX - Math.cos(angle) * 15},${strataY - Math.sin(angle) * 15}
-            Q ${strataX + Math.cos(perpAngle) * pathWidth * 0.5},${strataY + Math.sin(perpAngle) * pathWidth * 0.5 + wave}
-              ${strataX + Math.cos(perpAngle) * pathWidth * 0.8},${strataY + Math.sin(perpAngle) * pathWidth * 0.8}
+            M ${strataX + Math.cos(perpAngle) * pathWidth * 0.2},${strataY + Math.sin(perpAngle) * pathWidth * 0.2}
+            L ${strataX + Math.cos(perpAngle) * pathWidth * 0.6},${strataY + Math.sin(perpAngle) * pathWidth * 0.6}
         `;
         strata.setAttribute('d', strataPath);
-        strata.setAttribute('stroke', i % 2 === 0 ? '#8d6e63' : '#795548');
-        strata.setAttribute('stroke-width', '0.8');
+        strata.setAttribute('stroke', 'rgba(93, 64, 55, 0.3)');
+        strata.setAttribute('stroke-width', '1');
         strata.setAttribute('fill', 'none');
-        strata.setAttribute('opacity', '0.5');
         g.appendChild(strata);
     }
     
-    g.appendChild(mainCanyon);
+    // Add canyon depth line
+    const depthLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const depthPath = `
+        M ${fromX},${fromY}
+        L ${canyonX},${canyonY}
+        L ${toX},${toY}
+    `;
+    depthLine.setAttribute('d', depthPath);
+    depthLine.setAttribute('stroke', 'rgba(62, 39, 35, 0.3)');
+    depthLine.setAttribute('stroke-width', '1');
+    depthLine.setAttribute('fill', 'none');
     
-    // Deep canyon shadow
-    const canyonDepth = midY + Math.sin(perpAngle) * pathWidth * 0.6;
-    const shadowEllipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-    shadowEllipse.setAttribute('cx', midX + Math.cos(perpAngle) * pathWidth * 0.4);
-    shadowEllipse.setAttribute('cy', canyonDepth);
-    shadowEllipse.setAttribute('rx', pathWidth * 0.4);
-    shadowEllipse.setAttribute('ry', pathWidth * 0.2);
-    shadowEllipse.setAttribute('fill', `url(#${shadowGradientId})`);
-    shadowEllipse.setAttribute('transform', `rotate(${angle * 180 / Math.PI}, ${midX}, ${midY})`);
-    g.appendChild(shadowEllipse);
-    
-    // Rock formations and debris
-    for (let i = 0; i < 12; i++) {
-        const formation = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        const t = 0.1 + Math.random() * 0.8;
-        const baseX = fromX + (toX - fromX) * t;
-        const baseY = fromY + (toY - fromY) * t;
-        const offsetDist = pathWidth * (0.2 + Math.random() * 0.6);
-        const rockX = baseX + Math.cos(perpAngle) * offsetDist;
-        const rockY = baseY + Math.sin(perpAngle) * offsetDist;
-        
-        // Create layered rock formation
-        if (i < 6) {
-            const rockBase = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            const size = 3 + Math.random() * 4;
-            const basePoints = createRockFormation(rockX, rockY, size);
-            rockBase.setAttribute('points', basePoints);
-            rockBase.setAttribute('fill', '#6d4c41');
-            rockBase.setAttribute('opacity', '0.7');
-            formation.appendChild(rockBase);
-            
-            // Add highlight
-            const rockHighlight = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            const highlightPoints = createRockFormation(rockX - 1, rockY - 1, size * 0.7);
-            rockHighlight.setAttribute('points', highlightPoints);
-            rockHighlight.setAttribute('fill', '#8d6e63');
-            rockHighlight.setAttribute('opacity', '0.4');
-            formation.appendChild(rockHighlight);
-        } else {
-            // Smaller debris
-            const debris = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            debris.setAttribute('cx', rockX);
-            debris.setAttribute('cy', rockY);
-            debris.setAttribute('r', 1.5 + Math.random() * 2);
-            debris.setAttribute('fill', '#5d4037');
-            debris.setAttribute('opacity', '0.8');
-            formation.appendChild(debris);
-        }
-        
-        g.appendChild(formation);
-    }
-    
-    // Erosion marks on canyon walls
-    for (let i = 0; i < 6; i++) {
-        const erosion = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const t = 0.2 + i * 0.12;
-        const erosionX = fromX + (toX - fromX) * t;
-        const erosionY = fromY + (toY - fromY) * t;
-        
-        const erosionPath = `
-            M ${erosionX + Math.cos(perpAngle) * pathWidth * 0.3},${erosionY + Math.sin(perpAngle) * pathWidth * 0.3}
-            Q ${erosionX + Math.cos(perpAngle) * pathWidth * 0.5},${erosionY + Math.sin(perpAngle) * pathWidth * 0.5 + Math.sin(i) * 5}
-              ${erosionX + Math.cos(perpAngle) * pathWidth * 0.7},${erosionY + Math.sin(perpAngle) * pathWidth * 0.7}
-        `;
-        erosion.setAttribute('d', erosionPath);
-        erosion.setAttribute('stroke', '#3e2723');
-        erosion.setAttribute('stroke-width', '1');
-        erosion.setAttribute('fill', 'none');
-        erosion.setAttribute('opacity', '0.2');
-        erosion.setAttribute('stroke-linecap', 'round');
-        g.appendChild(erosion);
-    }
+    g.appendChild(depthLine);
     
     svg.appendChild(g);
 }
 
-// Helper function to create canyon layer paths
-function createCanyonLayer(fromX, fromY, toX, toY, midX, midY, perpAngle, width, offset, isErosion) {
-    const points = [];
-    const segments = 10;
-    
-    points.push(`M ${fromX},${fromY}`);
-    
-    for (let i = 0; i <= segments; i++) {
-        const t = i / segments;
-        const x = fromX + (toX - fromX) * t;
-        const y = fromY + (toY - fromY) * t;
-        
-        let depth;
-        if (isErosion) {
-            // Irregular erosion pattern
-            depth = width * (0.8 + Math.sin(t * Math.PI * 4 + offset) * 0.2);
-        } else {
-            // Canyon depth curve
-            depth = width * Math.sin(t * Math.PI) * (1 + Math.sin(t * Math.PI * 3 + offset) * 0.1);
-        }
-        
-        const px = x + Math.cos(perpAngle) * depth;
-        const py = y + Math.sin(perpAngle) * depth;
-        
-        if (i === 0) {
-            points.push(`L ${px},${py}`);
-        } else {
-            const cx = x + Math.cos(perpAngle) * depth * 0.8;
-            const cy = y + Math.sin(perpAngle) * depth * 0.8;
-            points.push(`Q ${cx},${cy} ${px},${py}`);
-        }
-    }
-    
-    points.push(`L ${toX},${toY} Z`);
-    return points.join(' ');
-}
-
-// Helper function to create detailed canyon wall
-function createDetailedCanyonWall(fromX, fromY, toX, toY, midX, midY, perpAngle, width) {
-    const path = [];
-    path.push(`M ${fromX},${fromY}`);
-    
-    // Create canyon wall with overhangs and indentations
-    const features = [
-        { t: 0.1, d: 0.6, indent: 0 },
-        { t: 0.2, d: 0.75, indent: 0.1 },
-        { t: 0.3, d: 0.85, indent: 0.05 },
-        { t: 0.4, d: 0.95, indent: 0.15 },
-        { t: 0.5, d: 1, indent: 0.2 },
-        { t: 0.6, d: 0.95, indent: 0.15 },
-        { t: 0.7, d: 0.85, indent: 0.1 },
-        { t: 0.8, d: 0.7, indent: 0.05 },
-        { t: 0.9, d: 0.5, indent: 0 }
-    ];
-    
-    features.forEach((feature, i) => {
-        const x = fromX + (toX - fromX) * feature.t;
-        const y = fromY + (toY - fromY) * feature.t;
-        
-        // Create overhang effect
-        const overhangX = x + Math.cos(perpAngle) * width * (feature.d - feature.indent);
-        const overhangY = y + Math.sin(perpAngle) * width * (feature.d - feature.indent);
-        const indentX = x + Math.cos(perpAngle) * width * feature.d;
-        const indentY = y + Math.sin(perpAngle) * width * feature.d + 5;
-        
-        if (i === 0) {
-            path.push(`L ${overhangX},${overhangY}`);
-        } else {
-            const prevFeature = features[i - 1];
-            const prevX = fromX + (toX - fromX) * prevFeature.t;
-            const prevY = fromY + (toY - fromY) * prevFeature.t;
-            const cpX = (prevX + x) / 2 + Math.cos(perpAngle) * width * ((prevFeature.d + feature.d) / 2);
-            const cpY = (prevY + y) / 2 + Math.sin(perpAngle) * width * ((prevFeature.d + feature.d) / 2);
-            
-            path.push(`C ${cpX},${cpY} ${overhangX},${overhangY} ${indentX},${indentY}`);
-        }
-    });
-    
-    path.push(`L ${toX},${toY} Z`);
-    return path.join(' ');
-}
-
-// Helper function to create rock formations
-function createRockFormation(centerX, centerY, size) {
-    const points = [];
-    const vertices = 4 + Math.floor(Math.random() * 3);
-    
-    for (let i = 0; i < vertices; i++) {
-        const angle = (i / vertices) * Math.PI * 2 - Math.PI / 2;
-        const radius = size * (0.6 + Math.random() * 0.4);
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius * 1.5; // Elongate vertically
-        points.push(`${x},${y}`);
-    }
-    
-    return points.join(' ');
-}
 
 
 // Setup event listeners
