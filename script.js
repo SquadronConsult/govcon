@@ -175,10 +175,21 @@ function addSpecialConnections() {
     svg.style.width = boardRect.width + 'px';
     svg.style.height = boardRect.height + 'px';
     svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '1';
+    svg.style.zIndex = '100'; // Temporarily high z-index
+    svg.style.backgroundColor = 'rgba(255, 255, 0, 0.2)'; // Yellow background to see SVG
     
     // Set viewBox to match board dimensions
     svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
+    
+    // Add a test circle to verify SVG is working
+    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    testCircle.setAttribute('cx', boardRect.width / 2);
+    testCircle.setAttribute('cy', boardRect.height / 2);
+    testCircle.setAttribute('r', '50');
+    testCircle.setAttribute('fill', 'red');
+    testCircle.setAttribute('stroke', 'black');
+    testCircle.setAttribute('stroke-width', '3');
+    svg.appendChild(testCircle);
     
     // Draw connections
     drawMountainConnections(svg, board, boardRect);
@@ -186,6 +197,8 @@ function addSpecialConnections() {
     
     // Append SVG to wrapper
     boardWrapper.appendChild(svg);
+    
+    console.log('SVG added with', svg.children.length, 'children');
 }
 
 // Draw mountain connections
@@ -238,12 +251,19 @@ function drawCurvedPath(svg, fromSquare, toSquare, boardRect, color, isUpward) {
     
     path.setAttribute('d', pathData);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '12');
+    path.setAttribute('stroke-width', '20');
     path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '0.7');
+    path.setAttribute('opacity', '1');
     path.setAttribute('stroke-linecap', 'round');
     
     svg.appendChild(path);
+    
+    console.log('Path added:', {
+        from: `${fromX},${fromY}`,
+        to: `${toX},${toY}`,
+        pathData,
+        color
+    });
 }
 
 
