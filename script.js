@@ -36,10 +36,10 @@ function initGame() {
     createBoard();
     setupEventListeners();
     
-    // Draw connections after board is ready with longer delay
+    // Draw connections after board is ready
     setTimeout(() => {
         drawBoardConnections();
-    }, 500);
+    }, 100);
     
     // Redraw on window resize
     let resizeTimeout;
@@ -55,10 +55,7 @@ function initGame() {
 
 // Draw board connections
 function drawBoardConnections() {
-    // Wait for next frame to ensure layout is complete
     requestAnimationFrame(() => {
-        const svg = document.querySelector('.board svg');
-        if (svg) svg.remove();
         addSpecialConnections();
     });
 }
@@ -150,88 +147,133 @@ function createBoard() {
 // Add visual connections for special squares
 function addSpecialConnections() {
     const board = document.getElementById('gameBoard');
-    if (!board) {
-        console.error('Board not found');
+    const boardWrapper = document.querySelector('.board-wrapper');
+    
+    if (!board || !boardWrapper) {
+        console.error('Board or wrapper not found');
         return;
     }
     
     // Remove any existing SVG
-    const existingSvg = document.querySelector('.mountains-valleys-svg');
+    const existingSvg = boardWrapper.querySelector('.mountains-valleys-svg');
     if (existingSvg) {
         existingSvg.remove();
     }
     
-    // Get the first square to determine grid dimensions
-    const firstSquare = board.querySelector('.square');
-    if (!firstSquare) return;
-    
-    // Create SVG overlay positioned inside the grid area
+    // Create SVG overlay
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.classList.add('mountains-valleys-svg');
+    
+    // Get exact board dimensions and position
+    const boardRect = board.getBoundingClientRect();
+    const wrapperRect = boardWrapper.getBoundingClientRect();
+    
+    // Position SVG to overlay the board exactly
     svg.style.position = 'absolute';
-    svg.style.top = '20px'; // Board padding
-    svg.style.left = '20px'; // Board padding
-    svg.style.width = 'calc(100% - 40px)';
-    svg.style.height = 'calc(100% - 40px)';
+    svg.style.left = (boardRect.left - wrapperRect.left) + 'px';
+    svg.style.top = (boardRect.top - wrapperRect.top) + 'px';
+    svg.style.width = boardRect.width + 'px';
+    svg.style.height = boardRect.height + 'px';
     svg.style.pointerEvents = 'none';
+    svg.style.zIndex = '1';
     
-    // Calculate grid dimensions
-    const squareSize = firstSquare.offsetWidth;
-    const gridSize = squareSize * 10;
-    
-    svg.setAttribute('viewBox', `0 0 ${gridSize} ${gridSize}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
-    
-    console.log('Grid dimensions:', gridSize, 'x', gridSize, 'Square size:', squareSize);
-    
-    // Draw mountains
-    Object.entries(MOUNTAINS).forEach(([from, data]) => {
-        drawConnection(svg, parseInt(from), data.to, squareSize, true);
+    console.log('SVG positioning:', {
+        left: svg.style.left,
+        top: svg.style.top,
+        width: svg.style.width,
+        height: svg.style.height,
+        boardRect,
+        wrapperRect
     });
     
-    // Draw valleys
-    Object.entries(VALLEYS).forEach(([from, data]) => {
-        drawConnection(svg, parseInt(from), data.to, squareSize, false);
-    });
+    // Set viewBox to match board dimensions
+    svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
     
-    // Insert SVG as first child of board
-    board.insertBefore(svg, board.firstChild);
-    console.log('SVG connections added');
+    // Add debug background to verify SVG is visible
+    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bgRect.setAttribute('x', '0');
+    bgRect.setAttribute('y', '0');
+    bgRect.setAttribute('width', boardRect.width);
+    bgRect.setAttribute('height', boardRect.height);
+    bgRect.setAttribute('fill', 'rgba(255, 0, 0, 0.1)');
+    bgRect.setAttribute('stroke', 'red');
+    bgRect.setAttribute('stroke-width', '2');
+    svg.appendChild(bgRect);
+    
+    // Draw connections
+    drawMountainConnections(svg, board);
+    drawValleyConnections(svg, board);
+    
+    // Append SVG to wrapper
+    boardWrapper.appendChild(svg);
+    
+    console.log('SVG appended. Total paths:', svg.querySelectorAll('path').length);
+    console.log('SVG element:', svg);
 }
 
-// Draw a connection between two squares
-function drawConnection(svg, fromNum, toNum, squareSize, isMountain) {
-    // Calculate grid positions
-    const fromRow = Math.floor((fromNum - 1) / 10);
-    const fromCol = (fromNum - 1) % 10;
-    const toRow = Math.floor((toNum - 1) / 10);
-    const toCol = (toNum - 1) % 10;
+// Draw mountain connections
+function drawMountainConnections(svg, board) {
+    Object.entries(MOUNTAINS).forEach(([from, data]) => {
+        const fromSquare = document.getElementById(`square-${from}`);
+        const toSquare = document.getElementById(`square-${data.to}`);
+        
+        if (fromSquare && toSquare) {
+            drawCurvedPath(svg, board, fromSquare, toSquare, '#228B22', true);
+        }
+    });
+}
+
+// Draw valley connections
+function drawValleyConnections(svg, board) {
+    Object.entries(VALLEYS).forEach(([from, data]) => {
+        const fromSquare = document.getElementById(`square-${from}`);
+        const toSquare = document.getElementById(`square-${data.to}`);
+        
+        if (fromSquare && toSquare) {
+            drawCurvedPath(svg, board, fromSquare, toSquare, '#d32f2f', false);
+        }
+    });
+}
+
+// Draw a curved path between two squares
+function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
+    const boardRect = board.getBoundingClientRect();
+    const fromRect = fromSquare.getBoundingClientRect();
+    const toRect = toSquare.getBoundingClientRect();
     
-    // Adjust columns for snake pattern
-    const adjustedFromCol = fromRow % 2 === 0 ? fromCol : 9 - fromCol;
-    const adjustedToCol = toRow % 2 === 0 ? toCol : 9 - toCol;
+    // Calculate centers relative to the board
+    const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
+    const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
+    const toX = (toRect.left - boardRect.left) + toRect.width / 2;
+    const toY = (toRect.top - boardRect.top) + toRect.height / 2;
     
-    // Calculate center positions
-    const fromX = adjustedFromCol * squareSize + squareSize / 2;
-    const fromY = (9 - fromRow) * squareSize + squareSize / 2;
-    const toX = adjustedToCol * squareSize + squareSize / 2;
-    const toY = (9 - toRow) * squareSize + squareSize / 2;
-    
-    // Create path
+    // Create curved path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const midX = (fromX + toX) / 2;
-    const midY = (fromY + toY) / 2 + (isMountain ? -30 : 30);
     
-    path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
-    path.setAttribute('stroke', isMountain ? '#228B22' : '#d32f2f');
-    path.setAttribute('stroke-width', '12');
+    // Calculate control point for curve
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+    const curveOffset = isUpward ? -40 : 40;
+    const controlY = midY + curveOffset;
+    
+    // Create path data
+    const pathData = `M ${fromX},${fromY} Q ${midX},${controlY} ${toX},${toY}`;
+    
+    path.setAttribute('d', pathData);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '10');
     path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '0.7');
+    path.setAttribute('opacity', '0.6');
     path.setAttribute('stroke-linecap', 'round');
     
     svg.appendChild(path);
     
-    console.log(`${isMountain ? 'Mountain' : 'Valley'} ${fromNum}->${toNum} drawn at`, {fromX, fromY, toX, toY});
+    console.log('Path drawn:', {
+        from: fromSquare.id,
+        to: toSquare.id,
+        pathData,
+        color
+    });
 }
 
 
@@ -290,6 +332,11 @@ function startNewGame(numPlayers) {
     
     // Position pieces
     positionPlayersOnSquare(1);
+    
+    // Redraw connections after game starts
+    setTimeout(() => {
+        drawBoardConnections();
+    }, 100);
     
     saveGameState();
 }
@@ -485,6 +532,11 @@ function loadGameState() {
                 // Position pieces
                 const positions = [...new Set(gameState.players.map(p => p.position))];
                 positions.forEach(pos => positionPlayersOnSquare(pos));
+                
+                // Redraw connections after loading
+                setTimeout(() => {
+                    drawBoardConnections();
+                }, 100);
             }
         } catch (e) {
             console.error('Error loading game state:', e);
