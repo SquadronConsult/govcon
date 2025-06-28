@@ -9,18 +9,28 @@ let gameState = {
 // Board configuration
 const BOARD_SIZE = 100;
 const MOUNTAINS = {
-    15: { to: 35, name: "Congressional Champion" },
-    28: { to: 52, name: "Pentagon Endorsement" },
-    43: { to: 67, name: "Industry Partnership" },
-    72: { to: 91, name: "Successful Test" }
+    1: { to: 38, name: "Sole Source Justification" },
+    4: { to: 14, name: "Congressional Earmark" },
+    9: { to: 31, name: "Massive Seed Round" },
+    21: { to: 42, name: "DARPA Interest" },
+    28: { to: 84, name: "Pentagon Champion" },
+    36: { to: 44, name: "Aww, your first SBIR" },
+    51: { to: 67, name: "Cost-Plus Contract" },
+    71: { to: 91, name: "Finally got your ATO" },
+    80: { to: 100, name: "Presidential Priority" }
 };
 
 const VALLEYS = {
-    87: { to: 24, name: "Budget Cut" },
-    78: { to: 45, name: "Requirements Change" },
-    65: { to: 18, name: "Competing Priority" },
-    56: { to: 12, name: "Failed Milestone Review" },
-    32: { to: 8, name: "Compliance Issue" }
+    16: { to: 6, name: "Protest Filed" },
+    47: { to: 26, name: "The CR Hit" },
+    49: { to: 11, name: "Test Failure" },
+    56: { to: 53, name: "Scope Creep" },
+    62: { to: 19, name: "Incumbent stole your Tech" },
+    64: { to: 60, name: "Requirement Change" },
+    87: { to: 24, name: "Champion Retired" },
+    93: { to: 73, name: "Committee Review" },
+    95: { to: 75, name: "Environmental Impact" },
+    98: { to: 78, name: "DCAA Audit" }
 };
 
 // Player colors and names
@@ -301,26 +311,55 @@ function drawMountainPath(svg, fromSquare, toSquare, boardRect) {
     const midY = (fromY + toY) / 2;
     const angle = Math.atan2(toY - fromY, toX - fromX);
     const perpAngle = angle - Math.PI / 2;
-    const pathWidth = 35;
+    const pathWidth = 17;
     
     // Create clean mountain silhouette
     const mountain = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     
-    // Calculate peak point
-    const peakX = midX + Math.cos(perpAngle) * pathWidth * 0.8;
-    const peakY = midY + Math.sin(perpAngle) * pathWidth * 0.8 - 20;
+    // Create a more natural mountain range silhouette
+    const segments = 12;
+    const pathPoints = [`M ${fromX},${fromY}`];
     
-    // Create simple mountain shape with clean edges
-    const mountainPath = `
-        M ${fromX},${fromY}
-        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.3},${fromY + Math.sin(perpAngle) * pathWidth * 0.3}
-        L ${midX - (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY - (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
-        L ${peakX},${peakY}
-        L ${midX + (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY + (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
-        L ${toX + Math.cos(perpAngle) * pathWidth * 0.3},${toY + Math.sin(perpAngle) * pathWidth * 0.3}
-        L ${toX},${toY}
-        Z
-    `;
+    // Generate mountain peaks and valleys along the path
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const baseX = fromX + (toX - fromX) * t;
+        const baseY = fromY + (toY - fromY) * t;
+        
+        // Create varied peak heights
+        let height;
+        if (i === 0 || i === segments) {
+            height = 0; // Start and end at base
+        } else if (i === Math.floor(segments / 2)) {
+            // Main peak in the middle
+            height = pathWidth * 1.2;
+        } else if (i === Math.floor(segments / 3) || i === Math.floor(2 * segments / 3)) {
+            // Secondary peaks
+            height = pathWidth * 0.9;
+        } else {
+            // Smaller variations
+            height = pathWidth * (0.3 + Math.sin(i * 1.5) * 0.3);
+        }
+        
+        const peakX = baseX + Math.cos(perpAngle) * height;
+        const peakY = baseY + Math.sin(perpAngle) * height - height * 0.3;
+        
+        if (i === 0) {
+            pathPoints.push(`L ${peakX},${peakY}`);
+        } else {
+            // Use quadratic curves for smoother transitions
+            const prevT = (i - 1) / segments;
+            const prevBaseX = fromX + (toX - fromX) * prevT;
+            const prevBaseY = fromY + (toY - fromY) * prevT;
+            const cpX = (prevBaseX + baseX) / 2 + Math.cos(perpAngle) * height * 0.8;
+            const cpY = (prevBaseY + baseY) / 2 + Math.sin(perpAngle) * height * 0.8 - height * 0.2;
+            
+            pathPoints.push(`Q ${cpX},${cpY} ${peakX},${peakY}`);
+        }
+    }
+    
+    pathPoints.push(`L ${toX},${toY} Z`);
+    const mountainPath = pathPoints.join(' ');
     
     mountain.setAttribute('d', mountainPath);
     mountain.setAttribute('fill', 'url(#mountainGradient)');
@@ -329,20 +368,6 @@ function drawMountainPath(svg, fromSquare, toSquare, boardRect) {
     mountain.setAttribute('stroke-opacity', '0.5');
     
     g.appendChild(mountain);
-    
-    // Add subtle ridge line
-    const ridge = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const ridgePath = `
-        M ${fromX},${fromY}
-        L ${peakX},${peakY}
-        L ${toX},${toY}
-    `;
-    ridge.setAttribute('d', ridgePath);
-    ridge.setAttribute('stroke', 'rgba(255, 255, 255, 0.3)');
-    ridge.setAttribute('stroke-width', '1');
-    ridge.setAttribute('fill', 'none');
-    
-    g.appendChild(ridge);
     
     // Add rocks and pebbles
     for (let i = 0; i < 12; i++) {
@@ -404,26 +429,55 @@ function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
     const midY = (fromY + toY) / 2;
     const angle = Math.atan2(toY - fromY, toX - fromX);
     const perpAngle = angle + Math.PI / 2;
-    const pathWidth = 35;
+    const pathWidth = 17;
     
     // Create clean valley/canyon shape
     const valley = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     
-    // Calculate canyon depth point
-    const canyonX = midX + Math.cos(perpAngle) * pathWidth * 0.8;
-    const canyonY = midY + Math.sin(perpAngle) * pathWidth * 0.8 + 15;
+    // Create a more natural canyon/valley silhouette
+    const segments = 12;
+    const pathPoints = [`M ${fromX},${fromY}`];
     
-    // Create simple canyon shape with clean edges
-    const valleyPath = `
-        M ${fromX},${fromY}
-        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.3},${fromY + Math.sin(perpAngle) * pathWidth * 0.3}
-        L ${midX - (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY - (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
-        L ${canyonX},${canyonY}
-        L ${midX + (toX - fromX) * 0.2 + Math.cos(perpAngle) * pathWidth * 0.6},${midY + (toY - fromY) * 0.2 + Math.sin(perpAngle) * pathWidth * 0.6}
-        L ${toX + Math.cos(perpAngle) * pathWidth * 0.3},${toY + Math.sin(perpAngle) * pathWidth * 0.3}
-        L ${toX},${toY}
-        Z
-    `;
+    // Generate canyon depths and variations along the path
+    for (let i = 0; i <= segments; i++) {
+        const t = i / segments;
+        const baseX = fromX + (toX - fromX) * t;
+        const baseY = fromY + (toY - fromY) * t;
+        
+        // Create varied canyon depths
+        let depth;
+        if (i === 0 || i === segments) {
+            depth = 0; // Start and end at surface
+        } else if (i === Math.floor(segments / 2)) {
+            // Deepest point in the middle
+            depth = pathWidth * 1.2;
+        } else if (i === Math.floor(segments / 3) || i === Math.floor(2 * segments / 3)) {
+            // Secondary deep points
+            depth = pathWidth * 0.9;
+        } else {
+            // Smaller variations
+            depth = pathWidth * (0.3 + Math.sin(i * 1.5 + Math.PI) * 0.3);
+        }
+        
+        const canyonX = baseX + Math.cos(perpAngle) * depth;
+        const canyonY = baseY + Math.sin(perpAngle) * depth + depth * 0.2;
+        
+        if (i === 0) {
+            pathPoints.push(`L ${canyonX},${canyonY}`);
+        } else {
+            // Use quadratic curves for smoother transitions
+            const prevT = (i - 1) / segments;
+            const prevBaseX = fromX + (toX - fromX) * prevT;
+            const prevBaseY = fromY + (toY - fromY) * prevT;
+            const cpX = (prevBaseX + baseX) / 2 + Math.cos(perpAngle) * depth * 0.8;
+            const cpY = (prevBaseY + baseY) / 2 + Math.sin(perpAngle) * depth * 0.8 + depth * 0.1;
+            
+            pathPoints.push(`Q ${cpX},${cpY} ${canyonX},${canyonY}`);
+        }
+    }
+    
+    pathPoints.push(`L ${toX},${toY} Z`);
+    const valleyPath = pathPoints.join(' ');
     
     valley.setAttribute('d', valleyPath);
     valley.setAttribute('fill', 'url(#valleyGradient)');
@@ -434,36 +488,32 @@ function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
     g.appendChild(valley);
     
     // Add subtle sedimentary lines
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
         const strata = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const t = 0.3 + i * 0.2;
-        const strataY = fromY + (toY - fromY) * t;
+        const t = 0.2 + i * 0.2;
         const strataX = fromX + (toX - fromX) * t;
+        const strataY = fromY + (toY - fromY) * t;
+        
+        // Calculate depth at this point for accurate strata placement
+        const segmentIndex = Math.floor(t * segments);
+        const localT = (t * segments) - segmentIndex;
+        let strataDepth = pathWidth * 0.3;
+        if (Math.abs(t - 0.5) < 0.1) {
+            strataDepth = pathWidth * 0.8;
+        } else if (Math.abs(t - 0.33) < 0.1 || Math.abs(t - 0.67) < 0.1) {
+            strataDepth = pathWidth * 0.6;
+        }
         
         const strataPath = `
-            M ${strataX + Math.cos(perpAngle) * pathWidth * 0.2},${strataY + Math.sin(perpAngle) * pathWidth * 0.2}
-            L ${strataX + Math.cos(perpAngle) * pathWidth * 0.6},${strataY + Math.sin(perpAngle) * pathWidth * 0.6}
+            M ${strataX + Math.cos(perpAngle) * strataDepth * 0.3},${strataY + Math.sin(perpAngle) * strataDepth * 0.3}
+            L ${strataX + Math.cos(perpAngle) * strataDepth * 0.8},${strataY + Math.sin(perpAngle) * strataDepth * 0.8}
         `;
         strata.setAttribute('d', strataPath);
         strata.setAttribute('stroke', 'rgba(93, 64, 55, 0.3)');
-        strata.setAttribute('stroke-width', '1');
+        strata.setAttribute('stroke-width', '0.8');
         strata.setAttribute('fill', 'none');
         g.appendChild(strata);
     }
-    
-    // Add canyon depth line
-    const depthLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const depthPath = `
-        M ${fromX},${fromY}
-        L ${canyonX},${canyonY}
-        L ${toX},${toY}
-    `;
-    depthLine.setAttribute('d', depthPath);
-    depthLine.setAttribute('stroke', 'rgba(62, 39, 35, 0.3)');
-    depthLine.setAttribute('stroke-width', '1');
-    depthLine.setAttribute('fill', 'none');
-    
-    g.appendChild(depthLine);
     
     // Add rocks and pebbles in the canyon
     for (let i = 0; i < 15; i++) {
