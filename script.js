@@ -287,7 +287,7 @@ function drawMountain(svg, fromNum, toNum) {
     svg.appendChild(g);
 }
 
-// Draw valley (chute) graphic
+// Draw valley (downward path) graphic
 function drawValley(svg, fromNum, toNum) {
     const fromSquare = document.getElementById(`square-${fromNum}`);
     const toSquare = document.getElementById(`square-${toNum}`);
@@ -303,63 +303,54 @@ function drawValley(svg, fromNum, toNum) {
     const toX = toRect.left + toRect.width / 2 - boardRect.left;
     const toY = toRect.top + toRect.height / 2 - boardRect.top;
     
-    // Create curved slide path
-    const slideWidth = 35;
+    // Create valley group
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     
-    // Calculate the curve based on distance
-    const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
-    const curveFactor = Math.min(distance * 0.3, 100);
+    // Calculate valley path points
+    const midX = (fromX + toX) / 2;
+    const midY = Math.max(fromY, toY) + 30; // Depth of valley
     
-    // Determine curve direction based on relative positions
-    const angle = Math.atan2(toY - fromY, toX - fromX);
-    const perpAngle = angle + Math.PI / 2;
+    // Valley shape with curved edges
+    const valley = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const valleyPath = `
+        M ${fromX - 35} ${fromY - 10}
+        C ${fromX - 30} ${fromY + 5}, ${midX - 40} ${midY - 20}, ${midX - 30} ${midY}
+        Q ${midX} ${midY + 10}, ${midX + 30} ${midY}
+        C ${midX + 40} ${midY - 20}, ${toX + 30} ${toY + 5}, ${toX + 35} ${toY - 10}
+        L ${toX + 20} ${toY}
+        L ${toX} ${toY}
+        L ${toX - 20} ${toY - 5}
+        C ${midX + 20} ${midY - 30}, ${midX - 20} ${midY - 30}, ${fromX + 20} ${fromY - 5}
+        L ${fromX} ${fromY}
+        Z
+    `;
     
-    // Control points for a smooth S-curve
-    const cp1X = fromX + Math.cos(perpAngle) * curveFactor;
-    const cp1Y = fromY + Math.sin(perpAngle) * curveFactor;
-    const cp2X = toX - Math.cos(perpAngle) * curveFactor;
-    const cp2Y = toY - Math.sin(perpAngle) * curveFactor;
+    valley.setAttribute('d', valleyPath);
+    valley.setAttribute('fill', 'url(#valleyGradient' + fromNum + ')');
+    valley.setAttribute('stroke', '#8B4513');
+    valley.setAttribute('stroke-width', '2');
+    valley.setAttribute('opacity', '0.85');
     
-    // Main slide path
-    const slide = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const centerPath = `M ${fromX} ${fromY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`;
-    
-    // Create offset paths for slide edges
-    const perpX = -Math.sin(angle) * slideWidth / 2;
-    const perpY = Math.cos(angle) * slideWidth / 2;
-    
-    const slidePath = `M ${fromX - perpX} ${fromY - perpY} 
-                       C ${cp1X - perpX} ${cp1Y - perpY}, ${cp2X - perpX} ${cp2Y - perpY}, ${toX - perpX} ${toY - perpY}
-                       L ${toX + perpX} ${toY + perpY}
-                       C ${cp2X + perpX} ${cp2Y + perpY}, ${cp1X + perpX} ${cp1Y + perpY}, ${fromX + perpX} ${fromY + perpY}
-                       Z`;
-    
-    slide.setAttribute('d', slidePath);
-    slide.setAttribute('fill', '#E85D5D');
-    slide.setAttribute('stroke', '#C41E1E');
-    slide.setAttribute('stroke-width', '2');
-    slide.setAttribute('opacity', '0.85');
-    
-    // Add slide gradient
-    const gradientId = `slideGradient${fromNum}`;
+    // Create gradient for valley (darker at bottom)
+    const gradientId = `valleyGradient${fromNum}`;
     const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
     gradient.setAttribute('id', gradientId);
     gradient.setAttribute('x1', '0%');
     gradient.setAttribute('y1', '0%');
-    gradient.setAttribute('x2', '100%');
-    gradient.setAttribute('y2', '0%');
+    gradient.setAttribute('x2', '0%');
+    gradient.setAttribute('y2', '100%');
     
     const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('style', 'stop-color:#FF6B6B;stop-opacity:1');
+    stop1.setAttribute('style', 'stop-color:#CD853F;stop-opacity:1');
     
     const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop2.setAttribute('offset', '50%');
-    stop2.setAttribute('style', 'stop-color:#E85D5D;stop-opacity:1');
+    stop2.setAttribute('style', 'stop-color:#A0522D;stop-opacity:1');
     
     const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop3.setAttribute('offset', '100%');
-    stop3.setAttribute('style', 'stop-color:#C41E1E;stop-opacity:1');
+    stop3.setAttribute('style', 'stop-color:#654321;stop-opacity:1');
     
     gradient.appendChild(stop1);
     gradient.appendChild(stop2);
@@ -373,21 +364,51 @@ function drawValley(svg, fromNum, toNum) {
     }
     defs.appendChild(gradient);
     
-    slide.setAttribute('fill', `url(#${gradientId})`);
+    // Add rocky/debris details
+    const debris1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    debris1.setAttribute('cx', midX - 15);
+    debris1.setAttribute('cy', midY - 5);
+    debris1.setAttribute('r', '4');
+    debris1.setAttribute('fill', '#8B7355');
+    debris1.setAttribute('opacity', '0.6');
     
-    // Add center line for visual effect
-    const centerLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const centerPath = `M ${fromX} ${fromY} 
-                        C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`;
-    centerLine.setAttribute('d', centerPath);
-    centerLine.setAttribute('fill', 'none');
-    centerLine.setAttribute('stroke', '#A41010');
-    centerLine.setAttribute('stroke-width', '2');
-    centerLine.setAttribute('stroke-dasharray', '5,5');
-    centerLine.setAttribute('opacity', '0.5');
+    const debris2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    debris2.setAttribute('cx', midX + 10);
+    debris2.setAttribute('cy', midY - 8);
+    debris2.setAttribute('r', '3');
+    debris2.setAttribute('fill', '#8B7355');
+    debris2.setAttribute('opacity', '0.6');
     
-    svg.appendChild(slide);
-    svg.appendChild(centerLine);
+    // Add descending path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const descendPath = `M ${fromX} ${fromY} Q ${midX} ${midY - 10} ${toX} ${toY}`;
+    path.setAttribute('d', descendPath);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', '#8B4513');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('stroke-dasharray', '5,5');
+    path.setAttribute('opacity', '0.4');
+    
+    // Add shadow for depth
+    const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const shadowPath = `
+        M ${midX - 30} ${midY}
+        Q ${midX} ${midY + 10}, ${midX + 30} ${midY}
+        L ${midX + 25} ${midY - 5}
+        Q ${midX} ${midY + 5}, ${midX - 25} ${midY - 5}
+        Z
+    `;
+    shadow.setAttribute('d', shadowPath);
+    shadow.setAttribute('fill', '#000000');
+    shadow.setAttribute('opacity', '0.2');
+    
+    g.appendChild(valley);
+    g.appendChild(shadow);
+    g.appendChild(debris1);
+    g.appendChild(debris2);
+    g.appendChild(path);
+    
+    svg.appendChild(g);
 }
 
 // Setup event listeners
