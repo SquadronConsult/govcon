@@ -174,7 +174,7 @@ function addSpecialConnections() {
     svg.style.width = '100%';
     svg.style.height = '100%';
     svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '5';
+    svg.style.zIndex = '-1'; // Behind squares but above board background
     
     // Draw mountains (ladders)
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
@@ -659,6 +659,10 @@ function setupEventListeners() {
     const diceBtn = document.getElementById('rollDice');
     if (diceBtn) {
         diceBtn.addEventListener('click', rollDice);
+        // Add touch event for better mobile responsiveness
+        diceBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        });
     }
     
     // New game button
