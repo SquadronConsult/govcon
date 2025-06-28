@@ -175,7 +175,7 @@ function addSpecialConnections() {
     svg.style.width = boardRect.width + 'px';
     svg.style.height = boardRect.height + 'px';
     svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '10'; // Move back one layer
+    svg.style.zIndex = '1'; // Move back another layer
     svg.style.backgroundColor = 'rgba(255, 255, 0, 0.2)'; // Yellow background to see SVG
     
     // Set viewBox to match board dimensions
