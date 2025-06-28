@@ -271,7 +271,7 @@ html {
 .mountains-valleys-svg {
     position: absolute;
     pointer-events: none;
-    z-index: 100; /* Very high z-index to bring to front */
+    z-index: 1; /* Between background (-1) and squares (2) */
 }
 
 .square {

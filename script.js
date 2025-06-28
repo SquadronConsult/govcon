@@ -168,113 +168,61 @@ function addSpecialConnections() {
     const boardRect = board.getBoundingClientRect();
     const wrapperRect = boardWrapper.getBoundingClientRect();
     
-    // Position SVG to overlay the board content area (inside padding)
-    const boardStyles = window.getComputedStyle(board);
-    const paddingLeft = parseFloat(boardStyles.paddingLeft);
-    const paddingTop = parseFloat(boardStyles.paddingTop);
-    const paddingRight = parseFloat(boardStyles.paddingRight);
-    const paddingBottom = parseFloat(boardStyles.paddingBottom);
-    
-    const contentWidth = boardRect.width - paddingLeft - paddingRight;
-    const contentHeight = boardRect.height - paddingTop - paddingBottom;
-    
+    // Position SVG to overlay the board exactly
     svg.style.position = 'absolute';
-    svg.style.left = (boardRect.left - wrapperRect.left + paddingLeft) + 'px';
-    svg.style.top = (boardRect.top - wrapperRect.top + paddingTop) + 'px';
-    svg.style.width = contentWidth + 'px';
-    svg.style.height = contentHeight + 'px';
+    svg.style.left = (boardRect.left - wrapperRect.left) + 'px';
+    svg.style.top = (boardRect.top - wrapperRect.top) + 'px';
+    svg.style.width = boardRect.width + 'px';
+    svg.style.height = boardRect.height + 'px';
     svg.style.pointerEvents = 'none';
     svg.style.zIndex = '1';
     
-    console.log('SVG positioning:', {
-        left: svg.style.left,
-        top: svg.style.top,
-        width: svg.style.width,
-        height: svg.style.height,
-        boardRect,
-        wrapperRect
-    });
-    
-    // Set viewBox to match content dimensions
-    svg.setAttribute('viewBox', `0 0 ${contentWidth} ${contentHeight}`);
-    
-    // Add a test circle to verify SVG is working
-    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    testCircle.setAttribute('cx', contentWidth / 2);
-    testCircle.setAttribute('cy', contentHeight / 2);
-    testCircle.setAttribute('r', '50');
-    testCircle.setAttribute('fill', 'yellow');
-    testCircle.setAttribute('stroke', 'black');
-    testCircle.setAttribute('stroke-width', '3');
-    svg.appendChild(testCircle);
-    
-    // Add test lines to verify coordinate system
-    const testLine1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    testLine1.setAttribute('x1', '0');
-    testLine1.setAttribute('y1', '0');
-    testLine1.setAttribute('x2', contentWidth);
-    testLine1.setAttribute('y2', contentHeight);
-    testLine1.setAttribute('stroke', 'blue');
-    testLine1.setAttribute('stroke-width', '5');
-    svg.appendChild(testLine1);
-    
-    const testLine2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    testLine2.setAttribute('x1', contentWidth);
-    testLine2.setAttribute('y1', '0');
-    testLine2.setAttribute('x2', '0');
-    testLine2.setAttribute('y2', contentHeight);
-    testLine2.setAttribute('stroke', 'purple');
-    testLine2.setAttribute('stroke-width', '5');
-    svg.appendChild(testLine2);
+    // Set viewBox to match board dimensions
+    svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
     
     // Draw connections
-    drawMountainConnections(svg, board);
-    drawValleyConnections(svg, board);
+    drawMountainConnections(svg, board, boardRect);
+    drawValleyConnections(svg, board, boardRect);
     
     // Append SVG to wrapper
     boardWrapper.appendChild(svg);
-    
-    console.log('SVG appended. Total paths:', svg.querySelectorAll('path').length);
-    console.log('SVG element:', svg);
 }
 
 // Draw mountain connections
-function drawMountainConnections(svg, board) {
+function drawMountainConnections(svg, board, boardRect) {
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
         const fromSquare = document.getElementById(`square-${from}`);
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, board, fromSquare, toSquare, '#00FF00', true); // Bright green
+            drawCurvedPath(svg, fromSquare, toSquare, boardRect, '#228B22', true);
         }
     });
 }
 
 // Draw valley connections
-function drawValleyConnections(svg, board) {
+function drawValleyConnections(svg, board, boardRect) {
     Object.entries(VALLEYS).forEach(([from, data]) => {
         const fromSquare = document.getElementById(`square-${from}`);
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, board, fromSquare, toSquare, '#FF0000', false); // Bright red
+            drawCurvedPath(svg, fromSquare, toSquare, boardRect, '#d32f2f', false);
         }
     });
 }
 
 // Draw a curved path between two squares
-function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
-    // Debug: Log square info
-    console.log('Drawing path from', fromSquare.id, 'to', toSquare.id);
-    console.log('From square offset:', fromSquare.offsetLeft, fromSquare.offsetTop);
-    console.log('To square offset:', toSquare.offsetLeft, toSquare.offsetTop);
-    console.log('Square size:', fromSquare.offsetWidth, 'x', fromSquare.offsetHeight);
+function drawCurvedPath(svg, fromSquare, toSquare, boardRect, color, isUpward) {
+    // Get square positions using getBoundingClientRect
+    const fromRect = fromSquare.getBoundingClientRect();
+    const toRect = toSquare.getBoundingClientRect();
     
-    // Get positions using offsetLeft/offsetTop which are relative to the positioned parent (board)
-    const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2;
-    const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2;
-    const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2;
-    const toY = toSquare.offsetTop + toSquare.offsetHeight / 2;
+    // Calculate centers relative to the board
+    const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
+    const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
+    const toX = (toRect.left - boardRect.left) + toRect.width / 2;
+    const toY = (toRect.top - boardRect.top) + toRect.height / 2;
     
     // Create curved path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -290,40 +238,12 @@ function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
     
     path.setAttribute('d', pathData);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '20');
+    path.setAttribute('stroke-width', '12');
     path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '1'); // Full opacity
+    path.setAttribute('opacity', '0.7');
     path.setAttribute('stroke-linecap', 'round');
     
     svg.appendChild(path);
-    
-    // Add circles at start and end points for debugging
-    const startCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    startCircle.setAttribute('cx', fromX);
-    startCircle.setAttribute('cy', fromY);
-    startCircle.setAttribute('r', '10');
-    startCircle.setAttribute('fill', 'orange');
-    startCircle.setAttribute('stroke', 'black');
-    startCircle.setAttribute('stroke-width', '2');
-    svg.appendChild(startCircle);
-    
-    const endCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    endCircle.setAttribute('cx', toX);
-    endCircle.setAttribute('cy', toY);
-    endCircle.setAttribute('r', '10');
-    endCircle.setAttribute('fill', 'cyan');
-    endCircle.setAttribute('stroke', 'black');
-    endCircle.setAttribute('stroke-width', '2');
-    svg.appendChild(endCircle);
-    
-    console.log('Path drawn:', {
-        from: fromSquare.id,
-        to: toSquare.id,
-        fromCoords: {x: fromX, y: fromY},
-        toCoords: {x: toX, y: toY},
-        pathData,
-        color
-    });
 }
 
 
