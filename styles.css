@@ -234,6 +234,13 @@ html {
     width: 100%;
 }
 
+.board-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .board {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
@@ -242,9 +249,7 @@ html {
     background: var(--board-bg);
     padding: 20px;
     border-radius: 15px;
-    flex: 1;
-    max-width: 800px;
-    margin: 0 auto;
+    width: 100%;
     border: 3px solid var(--square-border);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     position: relative;
@@ -260,6 +265,18 @@ html {
     background: var(--board-bg);
     border-radius: 15px;
     z-index: -1;
+}
+
+/* SVG layer for mountains and valleys */
+.mountains-valleys-svg {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    pointer-events: none;
+    z-index: 0 !important;
+    /* Ensure it's visible during debugging */
+    min-width: 1px;
+    min-height: 1px;
 }
 
 .square {
@@ -513,6 +530,10 @@ html {
         align-items: center;
     }
     
+    .board-wrapper {
+        width: 100%;
+    }
+    
     .legend {
         width: 100%;
         max-width: 600px;
@@ -551,9 +572,13 @@ html {
         flex-direction: column;
     }
     
-    .board {
+    .board-wrapper {
         width: 100%;
         max-width: 100%;
+    }
+    
+    .board {
+        width: 100%;
         aspect-ratio: 1;
         padding: 10px;
     }
