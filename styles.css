@@ -1,19 +1,19 @@
 :root {
-    --board-bg: #f5e6d3;
-    --square-border: #8b7355;
-    --valley-bg: #d4a574;
-    --mountain-bg: #a8c5a2;
-    --funding-valley: #c57575;
-    --peak-bg: #7fa875;
-    --plateau-bg: #9bc59d;
-    --text-dark: #2c3e50;
+    --board-bg: #fffef5;
+    --square-border: #c9b896;
+    --valley-bg: #fef6e8;
+    --mountain-bg: #e8f5e8;
+    --funding-valley: #ffe8e8;
+    --peak-bg: #d5ead5;
+    --plateau-bg: #c8e6c9;
+    --text-dark: #333333;
     --text-light: #ffffff;
     --mountain-green: #5a8f52;
-    --valley-red: #c0392b;
-    --player-blue: #3498db;
-    --player-red: #e74c3c;
-    --player-yellow: #f39c12;
-    --player-purple: #9b59b6;
+    --valley-red: #d32f2f;
+    --player-blue: #2196f3;
+    --player-red: #f44336;
+    --player-yellow: #ffc107;
+    --player-purple: #9c27b0;
 }
 
 * {
@@ -24,7 +24,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    background: #e8dcc6;
+    background: #f0e9d8;
     min-height: 100vh;
     color: var(--text-dark);
     display: flex;
@@ -271,32 +271,10 @@ body {
     position: relative;
 }
 
-.square.mountain::before {
-    content: "⛰️";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.8em;
-    opacity: 0.3;
-    z-index: 1;
-}
-
 .square.valley {
     border: 3px solid var(--valley-red);
     box-shadow: inset 0 0 10px rgba(192, 57, 43, 0.3);
     position: relative;
-}
-
-.square.valley::before {
-    content: "📉";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.8em;
-    opacity: 0.3;
-    z-index: 1;
 }
 
 

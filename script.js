@@ -36,6 +36,24 @@ function initGame() {
     createBoard();
     setupEventListeners();
     loadGameState();
+    
+    // Redraw connections after a short delay to ensure layout is complete
+    setTimeout(() => {
+        const svg = document.querySelector('.board svg');
+        if (svg) svg.remove();
+        addSpecialConnections();
+    }, 100);
+    
+    // Redraw on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            const svg = document.querySelector('.board svg');
+            if (svg) svg.remove();
+            addSpecialConnections();
+        }, 100);
+    });
 }
 
 // Create game board
@@ -143,21 +161,21 @@ function addSpecialConnections() {
     svg.style.pointerEvents = 'none';
     svg.style.zIndex = '5';
     
-    // Draw connections for mountains (green arrows up)
+    // Draw mountains (ladders)
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
-        drawConnection(svg, parseInt(from), data.to, 'mountain');
+        drawMountain(svg, parseInt(from), data.to);
     });
     
-    // Draw connections for valleys (red arrows down)
+    // Draw valleys (chutes)
     Object.entries(VALLEYS).forEach(([from, data]) => {
-        drawConnection(svg, parseInt(from), data.to, 'valley');
+        drawValley(svg, parseInt(from), data.to);
     });
     
     board.appendChild(svg);
 }
 
-// Draw connection line between squares
-function drawConnection(svg, fromNum, toNum, type) {
+// Draw mountain (upward path) graphic
+function drawMountain(svg, fromNum, toNum) {
     const fromSquare = document.getElementById(`square-${fromNum}`);
     const toSquare = document.getElementById(`square-${toNum}`);
     
@@ -172,36 +190,204 @@ function drawConnection(svg, fromNum, toNum, type) {
     const toX = toRect.left + toRect.width / 2 - boardRect.left;
     const toY = toRect.top + toRect.height / 2 - boardRect.top;
     
-    // Create path
+    // Create mountain group
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    
+    // Calculate mountain path
+    const midX = (fromX + toX) / 2;
+    const midY = Math.min(fromY, toY) - 40; // Peak of mountain
+    
+    // Mountain shape with jagged edges
+    const mountain = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const mountainPath = `
+        M ${fromX - 30} ${fromY + 10}
+        L ${fromX - 20} ${fromY - 5}
+        L ${midX - 25} ${midY + 20}
+        L ${midX - 10} ${midY + 5}
+        L ${midX} ${midY}
+        L ${midX + 10} ${midY + 5}
+        L ${midX + 25} ${midY + 20}
+        L ${toX + 20} ${toY - 5}
+        L ${toX + 30} ${toY + 10}
+        L ${toX + 15} ${toY}
+        L ${toX} ${toY}
+        L ${toX - 15} ${toY + 5}
+        C ${midX + 10} ${midY + 40}, ${midX - 10} ${midY + 40}, ${fromX + 15} ${fromY + 5}
+        L ${fromX} ${fromY}
+        Z
+    `;
+    
+    mountain.setAttribute('d', mountainPath);
+    mountain.setAttribute('fill', 'url(#mountainGradient' + fromNum + ')');
+    mountain.setAttribute('stroke', '#4a6741');
+    mountain.setAttribute('stroke-width', '2');
+    mountain.setAttribute('opacity', '0.85');
+    
+    // Create gradient for mountain
+    const gradientId = `mountainGradient${fromNum}`;
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.setAttribute('id', gradientId);
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '100%');
+    gradient.setAttribute('x2', '0%');
+    gradient.setAttribute('y2', '0%');
+    
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('style', 'stop-color:#5a8f52;stop-opacity:1');
+    
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '50%');
+    stop2.setAttribute('style', 'stop-color:#7fa875;stop-opacity:1');
+    
+    const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop3.setAttribute('offset', '100%');
+    stop3.setAttribute('style', 'stop-color:#a8c5a2;stop-opacity:1');
+    
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    gradient.appendChild(stop3);
+    
+    // Create defs if it doesn't exist
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.appendChild(defs);
+    }
+    defs.appendChild(gradient);
+    
+    // Add snow cap
+    const snowCap = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const snowPath = `
+        M ${midX - 10} ${midY + 5}
+        L ${midX} ${midY}
+        L ${midX + 10} ${midY + 5}
+        L ${midX + 5} ${midY + 10}
+        L ${midX - 5} ${midY + 10}
+        Z
+    `;
+    snowCap.setAttribute('d', snowPath);
+    snowCap.setAttribute('fill', '#ffffff');
+    snowCap.setAttribute('opacity', '0.9');
+    
+    // Add climbing path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const d = `M ${fromX} ${fromY} Q ${(fromX + toX) / 2} ${(fromY + toY) / 2 - 50} ${toX} ${toY}`;
-    path.setAttribute('d', d);
+    const climbPath = `M ${fromX} ${fromY} Q ${midX} ${midY + 20} ${toX} ${toY}`;
+    path.setAttribute('d', climbPath);
     path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', type === 'mountain' ? '#5a8f52' : '#c0392b');
+    path.setAttribute('stroke', '#ffffff');
     path.setAttribute('stroke-width', '3');
     path.setAttribute('stroke-dasharray', '5,5');
-    path.setAttribute('opacity', '0.4');
+    path.setAttribute('opacity', '0.6');
     
-    // Add arrow marker
-    const markerId = `arrow-${type}-${fromNum}`;
-    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-    marker.setAttribute('id', markerId);
-    marker.setAttribute('markerWidth', '10');
-    marker.setAttribute('markerHeight', '10');
-    marker.setAttribute('refX', '8');
-    marker.setAttribute('refY', '3');
-    marker.setAttribute('orient', 'auto');
-    marker.setAttribute('markerUnits', 'strokeWidth');
+    g.appendChild(mountain);
+    g.appendChild(snowCap);
+    g.appendChild(path);
     
-    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    arrow.setAttribute('d', 'M0,0 L0,6 L9,3 z');
-    arrow.setAttribute('fill', type === 'mountain' ? '#5a8f52' : '#c0392b');
+    svg.appendChild(g);
+}
+
+// Draw valley (chute) graphic
+function drawValley(svg, fromNum, toNum) {
+    const fromSquare = document.getElementById(`square-${fromNum}`);
+    const toSquare = document.getElementById(`square-${toNum}`);
     
-    marker.appendChild(arrow);
-    svg.appendChild(marker);
-    path.setAttribute('marker-end', `url(#${markerId})`);
+    if (!fromSquare || !toSquare) return;
     
-    svg.appendChild(path);
+    const fromRect = fromSquare.getBoundingClientRect();
+    const toRect = toSquare.getBoundingClientRect();
+    const boardRect = svg.parentElement.getBoundingClientRect();
+    
+    const fromX = fromRect.left + fromRect.width / 2 - boardRect.left;
+    const fromY = fromRect.top + fromRect.height / 2 - boardRect.top;
+    const toX = toRect.left + toRect.width / 2 - boardRect.left;
+    const toY = toRect.top + toRect.height / 2 - boardRect.top;
+    
+    // Create curved slide path
+    const slideWidth = 35;
+    
+    // Calculate the curve based on distance
+    const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+    const curveFactor = Math.min(distance * 0.3, 100);
+    
+    // Determine curve direction based on relative positions
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const perpAngle = angle + Math.PI / 2;
+    
+    // Control points for a smooth S-curve
+    const cp1X = fromX + Math.cos(perpAngle) * curveFactor;
+    const cp1Y = fromY + Math.sin(perpAngle) * curveFactor;
+    const cp2X = toX - Math.cos(perpAngle) * curveFactor;
+    const cp2Y = toY - Math.sin(perpAngle) * curveFactor;
+    
+    // Main slide path
+    const slide = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const centerPath = `M ${fromX} ${fromY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`;
+    
+    // Create offset paths for slide edges
+    const perpX = -Math.sin(angle) * slideWidth / 2;
+    const perpY = Math.cos(angle) * slideWidth / 2;
+    
+    const slidePath = `M ${fromX - perpX} ${fromY - perpY} 
+                       C ${cp1X - perpX} ${cp1Y - perpY}, ${cp2X - perpX} ${cp2Y - perpY}, ${toX - perpX} ${toY - perpY}
+                       L ${toX + perpX} ${toY + perpY}
+                       C ${cp2X + perpX} ${cp2Y + perpY}, ${cp1X + perpX} ${cp1Y + perpY}, ${fromX + perpX} ${fromY + perpY}
+                       Z`;
+    
+    slide.setAttribute('d', slidePath);
+    slide.setAttribute('fill', '#E85D5D');
+    slide.setAttribute('stroke', '#C41E1E');
+    slide.setAttribute('stroke-width', '2');
+    slide.setAttribute('opacity', '0.85');
+    
+    // Add slide gradient
+    const gradientId = `slideGradient${fromNum}`;
+    const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    gradient.setAttribute('id', gradientId);
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '0%');
+    gradient.setAttribute('x2', '100%');
+    gradient.setAttribute('y2', '0%');
+    
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('style', 'stop-color:#FF6B6B;stop-opacity:1');
+    
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '50%');
+    stop2.setAttribute('style', 'stop-color:#E85D5D;stop-opacity:1');
+    
+    const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop3.setAttribute('offset', '100%');
+    stop3.setAttribute('style', 'stop-color:#C41E1E;stop-opacity:1');
+    
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    gradient.appendChild(stop3);
+    
+    // Create defs if it doesn't exist
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.appendChild(defs);
+    }
+    defs.appendChild(gradient);
+    
+    slide.setAttribute('fill', `url(#${gradientId})`);
+    
+    // Add center line for visual effect
+    const centerLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const centerPath = `M ${fromX} ${fromY} 
+                        C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`;
+    centerLine.setAttribute('d', centerPath);
+    centerLine.setAttribute('fill', 'none');
+    centerLine.setAttribute('stroke', '#A41010');
+    centerLine.setAttribute('stroke-width', '2');
+    centerLine.setAttribute('stroke-dasharray', '5,5');
+    centerLine.setAttribute('opacity', '0.5');
+    
+    svg.appendChild(slide);
+    svg.appendChild(centerLine);
 }
 
 // Setup event listeners
