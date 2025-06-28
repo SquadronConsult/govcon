@@ -35,13 +35,10 @@ const PLAYER_CONFIG = [
 function initGame() {
     createBoard();
     setupEventListeners();
-    loadGameState();
     
-    // Redraw connections after a short delay to ensure layout is complete
+    // Draw connections after board is ready
     setTimeout(() => {
-        const svg = document.querySelector('.board svg');
-        if (svg) svg.remove();
-        addSpecialConnections();
+        drawBoardConnections();
     }, 100);
     
     // Redraw on window resize
@@ -49,11 +46,18 @@ function initGame() {
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            const svg = document.querySelector('.board svg');
-            if (svg) svg.remove();
-            addSpecialConnections();
+            drawBoardConnections();
         }, 100);
     });
+    
+    loadGameState();
+}
+
+// Draw board connections
+function drawBoardConnections() {
+    const svg = document.querySelector('.board svg');
+    if (svg) svg.remove();
+    addSpecialConnections();
 }
 
 // Create game board
@@ -121,9 +125,6 @@ function createBoard() {
     
     // Rearrange squares for snake pattern
     rearrangeBoardSnakePattern();
-    
-    // Add visual connections for mountains and valleys
-    addSpecialConnections();
 }
 
 // Rearrange board in snake pattern
@@ -150,6 +151,17 @@ function rearrangeBoardSnakePattern() {
 // Add visual connections for special squares
 function addSpecialConnections() {
     const board = document.getElementById('gameBoard');
+    if (!board) {
+        console.error('Board not found');
+        return;
+    }
+    
+    // Check if board has squares
+    const squares = board.querySelectorAll('.square');
+    if (squares.length === 0) {
+        console.error('No squares found on board');
+        return;
+    }
     
     // Create SVG overlay for drawing connections
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -163,15 +175,24 @@ function addSpecialConnections() {
     
     // Draw mountains (ladders)
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
-        drawMountain(svg, parseInt(from), data.to);
+        try {
+            drawMountain(svg, parseInt(from), data.to);
+        } catch (e) {
+            console.error('Error drawing mountain', from, '->', data.to, e);
+        }
     });
     
     // Draw valleys (chutes)
     Object.entries(VALLEYS).forEach(([from, data]) => {
-        drawValley(svg, parseInt(from), data.to);
+        try {
+            drawValley(svg, parseInt(from), data.to);
+        } catch (e) {
+            console.error('Error drawing valley', from, '->', data.to, e);
+        }
     });
     
     board.appendChild(svg);
+    console.log('Special connections added');
 }
 
 // Draw mountain (upward path) graphic
@@ -413,19 +434,29 @@ function drawValley(svg, fromNum, toNum) {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Player selection
-    document.querySelectorAll('.player-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const playerCount = parseInt(e.target.dataset.players);
-            startNewGame(playerCount);
+    // Player selection - use event delegation for better reliability
+    const playerSetup = document.getElementById('playerSetup');
+    if (playerSetup) {
+        playerSetup.addEventListener('click', (e) => {
+            if (e.target.classList.contains('player-btn')) {
+                const playerCount = parseInt(e.target.dataset.players);
+                console.log('Starting game with', playerCount, 'players');
+                startNewGame(playerCount);
+            }
         });
-    });
+    }
     
     // Dice roll
-    document.getElementById('rollDice').addEventListener('click', rollDice);
+    const diceBtn = document.getElementById('rollDice');
+    if (diceBtn) {
+        diceBtn.addEventListener('click', rollDice);
+    }
     
     // New game button
-    document.getElementById('newGameBtn').addEventListener('click', resetGame);
+    const newGameBtn = document.getElementById('newGameBtn');
+    if (newGameBtn) {
+        newGameBtn.addEventListener('click', resetGame);
+    }
 }
 
 // Start new game
@@ -452,6 +483,11 @@ function startNewGame(playerCount) {
     createPlayerPieces();
     updateCurrentPlayer();
     saveGameState();
+    
+    // Redraw connections to ensure they're visible
+    setTimeout(() => {
+        drawBoardConnections();
+    }, 100);
 }
 
 // Create player pieces on board
