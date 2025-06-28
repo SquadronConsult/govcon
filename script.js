@@ -103,36 +103,32 @@ function createBoard() {
         square.appendChild(numberSpan);
         
         // Add labels for special squares
-        if (MOUNTAINS[i] || VALLEYS[i]) {
-            const label = document.createElement('span');
-            label.className = 'square-label';
-            label.textContent = MOUNTAINS[i]?.name || VALLEYS[i]?.name;
-            square.appendChild(label);
-        }
-        
-        // Add START and FINISH labels
         if (i === 1) {
-            const startLabel = document.createElement('span');
-            startLabel.className = 'square-label start-label';
-            startLabel.textContent = 'START';
-            square.appendChild(startLabel);
+            const label = document.createElement('div');
+            label.className = 'square-label start-label';
+            label.textContent = 'START';
+            square.appendChild(label);
         } else if (i === 100) {
-            const finishLabel = document.createElement('span');
-            finishLabel.className = 'square-label finish-label';
-            finishLabel.textContent = 'DEPLOYMENT!';
-            square.appendChild(finishLabel);
+            const label = document.createElement('div');
+            label.className = 'square-label finish-label';
+            label.textContent = 'DEPLOYMENT';
+            square.appendChild(label);
+        } else if (MOUNTAINS[i]) {
+            const label = document.createElement('div');
+            label.className = 'square-label';
+            label.textContent = MOUNTAINS[i].name;
+            square.appendChild(label);
+        } else if (VALLEYS[i]) {
+            const label = document.createElement('div');
+            label.className = 'square-label';
+            label.textContent = VALLEYS[i].name;
+            square.appendChild(label);
         }
         
         board.appendChild(square);
     }
     
     // Rearrange squares for snake pattern
-    rearrangeBoardSnakePattern();
-}
-
-// Rearrange board in snake pattern
-function rearrangeBoardSnakePattern() {
-    const board = document.getElementById('gameBoard');
     const squares = Array.from(board.children);
     const rearranged = [];
     
@@ -165,227 +161,137 @@ function addSpecialConnections() {
         existingSvg.remove();
     }
     
-    // Create SVG overlay
+    // Get the first square to determine grid dimensions
+    const firstSquare = board.querySelector('.square');
+    if (!firstSquare) return;
+    
+    // Create SVG overlay positioned inside the grid area
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.classList.add('mountains-valleys-svg');
     svg.style.position = 'absolute';
-    svg.style.top = '0';
-    svg.style.left = '0';
-    svg.style.width = '100%';
-    svg.style.height = '100%';
+    svg.style.top = '20px'; // Board padding
+    svg.style.left = '20px'; // Board padding
+    svg.style.width = 'calc(100% - 40px)';
+    svg.style.height = 'calc(100% - 40px)';
     svg.style.pointerEvents = 'none';
-    // svg.style.backgroundColor = 'rgba(255, 0, 0, 0.1)'; // Debug background
     
-    // Set viewBox - include padding in dimensions
-    const boardWidth = board.offsetWidth;
-    const boardHeight = board.offsetHeight;
-    svg.setAttribute('viewBox', `0 0 ${boardWidth} ${boardHeight}`);
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    // Calculate grid dimensions
+    const squareSize = firstSquare.offsetWidth;
+    const gridSize = squareSize * 10;
     
-    console.log('SVG dimensions:', boardWidth, 'x', boardHeight);
+    svg.setAttribute('viewBox', `0 0 ${gridSize} ${gridSize}`);
+    svg.setAttribute('preserveAspectRatio', 'none');
     
-    // Debug: Add background rect to see SVG bounds
-    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bgRect.setAttribute('x', '0');
-    bgRect.setAttribute('y', '0');
-    bgRect.setAttribute('width', boardWidth);
-    bgRect.setAttribute('height', boardHeight);
-    bgRect.setAttribute('fill', 'none');
-    bgRect.setAttribute('stroke', 'blue');
-    bgRect.setAttribute('stroke-width', '2');
-    svg.appendChild(bgRect);
+    console.log('Grid dimensions:', gridSize, 'x', gridSize, 'Square size:', squareSize);
     
-    // Draw simple lines for mountains
+    // Draw mountains
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
-        const fromSquare = document.getElementById(`square-${from}`);
-        const toSquare = document.getElementById(`square-${data.to}`);
-        
-        if (fromSquare && toSquare) {
-            // Get bounding rectangles
-            const boardRect = board.getBoundingClientRect();
-            const fromRect = fromSquare.getBoundingClientRect();
-            const toRect = toSquare.getBoundingClientRect();
-            
-            // Calculate positions relative to the board
-            const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
-            const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
-            const toX = (toRect.left - boardRect.left) + toRect.width / 2;
-            const toY = (toRect.top - boardRect.top) + toRect.height / 2;
-            
-            console.log(`Mountain ${from}->${data.to} coords:`, {fromX, fromY, toX, toY, boardRect});
-            
-            // Create thick green path for mountain
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            const midX = (fromX + toX) / 2;
-            const midY = (fromY + toY) / 2 - 30;
-            
-            path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
-            path.setAttribute('stroke', '#228B22');
-            path.setAttribute('stroke-width', '15');
-            path.setAttribute('fill', 'none');
-            path.setAttribute('opacity', '0.8');
-            path.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(path);
-            
-            console.log(`Mountain ${from}->${data.to} drawn`);
-        }
+        drawConnection(svg, parseInt(from), data.to, squareSize, true);
     });
     
-    // Draw simple lines for valleys
+    // Draw valleys
     Object.entries(VALLEYS).forEach(([from, data]) => {
-        const fromSquare = document.getElementById(`square-${from}`);
-        const toSquare = document.getElementById(`square-${data.to}`);
-        
-        if (fromSquare && toSquare) {
-            // Get bounding rectangles
-            const boardRect = board.getBoundingClientRect();
-            const fromRect = fromSquare.getBoundingClientRect();
-            const toRect = toSquare.getBoundingClientRect();
-            
-            // Calculate positions relative to the board
-            const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
-            const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
-            const toX = (toRect.left - boardRect.left) + toRect.width / 2;
-            const toY = (toRect.top - boardRect.top) + toRect.height / 2;
-            
-            // Create thick red path for valley
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            const midX = (fromX + toX) / 2;
-            const midY = (fromY + toY) / 2 + 30;
-            
-            path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
-            path.setAttribute('stroke', '#d32f2f');
-            path.setAttribute('stroke-width', '15');
-            path.setAttribute('fill', 'none');
-            path.setAttribute('opacity', '0.8');
-            path.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(path);
-            
-            console.log(`Valley ${from}->${data.to} drawn`);
-        }
+        drawConnection(svg, parseInt(from), data.to, squareSize, false);
     });
     
-    // Insert SVG before the board (so it renders behind)
-    const boardWrapper = board.parentElement;
-    if (boardWrapper && boardWrapper.classList.contains('board-wrapper')) {
-        boardWrapper.insertBefore(svg, board);
-        console.log('Simple graphics added to board wrapper');
-    }
+    // Insert SVG as first child of board
+    board.insertBefore(svg, board.firstChild);
+    console.log('SVG connections added');
+}
+
+// Draw a connection between two squares
+function drawConnection(svg, fromNum, toNum, squareSize, isMountain) {
+    // Calculate grid positions
+    const fromRow = Math.floor((fromNum - 1) / 10);
+    const fromCol = (fromNum - 1) % 10;
+    const toRow = Math.floor((toNum - 1) / 10);
+    const toCol = (toNum - 1) % 10;
+    
+    // Adjust columns for snake pattern
+    const adjustedFromCol = fromRow % 2 === 0 ? fromCol : 9 - fromCol;
+    const adjustedToCol = toRow % 2 === 0 ? toCol : 9 - toCol;
+    
+    // Calculate center positions
+    const fromX = adjustedFromCol * squareSize + squareSize / 2;
+    const fromY = (9 - fromRow) * squareSize + squareSize / 2;
+    const toX = adjustedToCol * squareSize + squareSize / 2;
+    const toY = (9 - toRow) * squareSize + squareSize / 2;
+    
+    // Create path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2 + (isMountain ? -30 : 30);
+    
+    path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
+    path.setAttribute('stroke', isMountain ? '#228B22' : '#d32f2f');
+    path.setAttribute('stroke-width', '12');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.7');
+    path.setAttribute('stroke-linecap', 'round');
+    
+    svg.appendChild(path);
+    
+    console.log(`${isMountain ? 'Mountain' : 'Valley'} ${fromNum}->${toNum} drawn at`, {fromX, fromY, toX, toY});
 }
 
 
 // Setup event listeners
 function setupEventListeners() {
-    // Player selection - use event delegation for better reliability
-    const playerSetup = document.getElementById('playerSetup');
-    if (playerSetup) {
-        playerSetup.addEventListener('click', (e) => {
-            if (e.target.classList.contains('player-btn')) {
-                const playerCount = parseInt(e.target.dataset.players);
-                console.log('Starting game with', playerCount, 'players');
-                startNewGame(playerCount);
-            }
+    // Player selection buttons
+    const playerBtns = document.querySelectorAll('.player-btn');
+    playerBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const numPlayers = parseInt(e.target.dataset.players);
+            startNewGame(numPlayers);
         });
-    }
+    });
     
-    // Dice roll
-    const diceBtn = document.getElementById('rollDice');
-    if (diceBtn) {
-        diceBtn.addEventListener('click', rollDice);
-        // Add touch event for better mobile responsiveness
-        diceBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-        });
-    }
+    // Roll dice button
+    const rollBtn = document.getElementById('rollDice');
+    rollBtn.addEventListener('click', rollDice);
     
     // New game button
     const newGameBtn = document.getElementById('newGameBtn');
-    if (newGameBtn) {
-        newGameBtn.addEventListener('click', resetGame);
-    }
-}
-
-// Start new game
-function startNewGame(playerCount) {
-    gameState.players = [];
-    gameState.currentPlayerIndex = 0;
-    gameState.isGameActive = true;
-    
-    // Initialize players
-    for (let i = 0; i < playerCount; i++) {
-        gameState.players.push({
-            id: i,
-            name: PLAYER_CONFIG[i].name,
-            position: 0,
-            color: PLAYER_CONFIG[i].color
-        });
-    }
-    
-    // Hide setup, show game
-    document.getElementById('playerSetup').classList.add('hidden');
-    document.getElementById('gameStatus').classList.remove('hidden');
-    
-    // Create player pieces
-    createPlayerPieces();
-    updateCurrentPlayer();
-    saveGameState();
-    
-    // Redraw connections to ensure they're visible with longer delay
-    setTimeout(() => {
-        drawBoardConnections();
-    }, 500);
-}
-
-// Create player pieces on board
-function createPlayerPieces() {
-    // Remove existing pieces
-    document.querySelectorAll('.player-piece').forEach(piece => piece.remove());
-    
-    // Create new pieces
-    gameState.players.forEach(player => {
-        const piece = document.createElement('div');
-        piece.className = `player-piece ${player.color}`;
-        piece.id = `player-${player.id}`;
-        piece.textContent = player.id + 1;
-        
-        // Position at start
-        positionPlayerPiece(player.id, 0);
-        document.getElementById('gameBoard').appendChild(piece);
+    newGameBtn.addEventListener('click', () => {
+        location.reload();
     });
 }
 
-// Position player piece
-function positionPlayerPiece(playerId, position) {
-    const piece = document.getElementById(`player-${playerId}`);
-    if (!piece) return;
-    
-    if (position === 0) {
-        // Position at start (outside board)
-        piece.style.left = '-40px';
-        piece.style.top = '50%';
-    } else {
-        // Position on square
-        const square = document.getElementById(`square-${position}`);
-        if (square) {
-            const rect = square.getBoundingClientRect();
-            const boardRect = document.getElementById('gameBoard').getBoundingClientRect();
-            
-            // Calculate offset for multiple players on same square
-            const playersOnSquare = gameState.players.filter(p => p.position === position);
-            const playerIndex = playersOnSquare.findIndex(p => p.id === playerId);
-            const offsetX = (playerIndex % 2) * 15 - 7.5;
-            const offsetY = Math.floor(playerIndex / 2) * 15 - 7.5;
-            
-            piece.style.left = `${rect.left - boardRect.left + rect.width/2 - 15 + offsetX}px`;
-            piece.style.top = `${rect.top - boardRect.top + rect.height/2 - 15 + offsetY}px`;
-        }
+// Start new game
+function startNewGame(numPlayers) {
+    gameState.players = [];
+    for (let i = 0; i < numPlayers; i++) {
+        gameState.players.push({
+            id: i,
+            name: PLAYER_CONFIG[i].name,
+            color: PLAYER_CONFIG[i].color,
+            position: 0,
+            element: null
+        });
     }
-}
-
-// Update current player display
-function updateCurrentPlayer() {
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    document.getElementById('currentPlayerName').textContent = currentPlayer.name;
+    
+    gameState.currentPlayerIndex = 0;
+    gameState.isGameActive = true;
+    
+    // Create player pieces
+    gameState.players.forEach(player => {
+        const piece = document.createElement('div');
+        piece.className = `player-piece ${player.color}`;
+        piece.textContent = player.id + 1;
+        player.element = piece;
+        document.getElementById('square-1').appendChild(piece);
+        player.position = 1;
+    });
+    
+    // Update UI
+    document.getElementById('playerSetup').classList.add('hidden');
+    document.getElementById('gameStatus').classList.remove('hidden');
+    updateCurrentPlayerDisplay();
+    
+    // Position pieces
+    positionPlayersOnSquare(1);
+    
+    saveGameState();
 }
 
 // Roll dice
@@ -393,50 +299,43 @@ function rollDice() {
     if (!gameState.isGameActive) return;
     
     const dice = document.getElementById('dice');
-    const diceBtn = document.getElementById('rollDice');
-    
-    // Disable button during roll
-    diceBtn.disabled = true;
-    dice.classList.add('rolling');
+    const diceValue = Math.floor(Math.random() * 6) + 1;
+    gameState.diceValue = diceValue;
     
     // Animate dice
-    let rollCount = 0;
-    const rollInterval = setInterval(() => {
-        dice.querySelector('.dice-value').textContent = Math.floor(Math.random() * 6) + 1;
-        rollCount++;
-        
-        if (rollCount > 10) {
-            clearInterval(rollInterval);
-            
-            // Final value
-            gameState.diceValue = Math.floor(Math.random() * 6) + 1;
-            dice.querySelector('.dice-value').textContent = gameState.diceValue;
-            dice.classList.remove('rolling');
-            
-            // Move player
-            moveCurrentPlayer();
-        }
-    }, 100);
+    dice.classList.add('rolling');
+    dice.querySelector('.dice-value').textContent = '?';
+    
+    setTimeout(() => {
+        dice.classList.remove('rolling');
+        dice.querySelector('.dice-value').textContent = diceValue;
+        moveCurrentPlayer(diceValue);
+    }, 500);
 }
 
 // Move current player
-function moveCurrentPlayer() {
-    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    const targetPosition = Math.min(currentPlayer.position + gameState.diceValue, BOARD_SIZE);
+function moveCurrentPlayer(steps) {
+    const player = gameState.players[gameState.currentPlayerIndex];
+    const currentPos = player.position;
+    let newPos = currentPos + steps;
+    
+    // Cap at 100
+    if (newPos > BOARD_SIZE) {
+        newPos = BOARD_SIZE;
+    }
     
     // Animate movement
-    animatePlayerMovement(currentPlayer.id, currentPlayer.position, targetPosition, () => {
-        currentPlayer.position = targetPosition;
+    animatePlayerMovement(player, currentPos, newPos, () => {
+        // Check for special squares
+        checkSpecialSquare(player);
         
-        // Check for mountains or valleys
-        checkSpecialSquare(currentPlayer);
-        
-        // Check for win
-        if (currentPlayer.position === BOARD_SIZE) {
-            endGame(currentPlayer);
+        // Check win condition
+        if (player.position === BOARD_SIZE) {
+            endGame(player);
         } else {
-            // Next turn
-            nextTurn();
+            // Next player's turn
+            gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+            updateCurrentPlayerDisplay();
         }
         
         saveGameState();
@@ -444,128 +343,155 @@ function moveCurrentPlayer() {
 }
 
 // Animate player movement
-function animatePlayerMovement(playerId, fromPos, toPos, callback) {
-    const piece = document.getElementById(`player-${playerId}`);
-    piece.classList.add('moving');
+function animatePlayerMovement(player, fromPos, toPos, callback) {
+    const steps = toPos - fromPos;
+    let currentStep = 0;
     
-    let currentPos = fromPos;
+    player.element.classList.add('moving');
+    
     const moveInterval = setInterval(() => {
-        currentPos++;
-        positionPlayerPiece(playerId, currentPos);
+        currentStep++;
+        player.position = fromPos + currentStep;
         
-        if (currentPos >= toPos) {
+        // Remove from current square
+        const currentSquare = player.element.parentElement;
+        if (currentSquare) {
+            currentSquare.removeChild(player.element);
+        }
+        
+        // Add to new square
+        const newSquare = document.getElementById(`square-${player.position}`);
+        if (newSquare) {
+            newSquare.appendChild(player.element);
+            positionPlayersOnSquare(player.position);
+        }
+        
+        if (currentStep >= steps) {
             clearInterval(moveInterval);
-            piece.classList.remove('moving');
+            player.element.classList.remove('moving');
             callback();
         }
-    }, 200);
+    }, 300);
 }
 
 // Check for special squares
 function checkSpecialSquare(player) {
     const position = player.position;
-    let specialMove = null;
+    const turnInfo = document.getElementById('turnInfo');
     
     if (MOUNTAINS[position]) {
-        specialMove = MOUNTAINS[position];
-        showTurnInfo(`${specialMove.name}! Climbing to square ${specialMove.to}!`, 'success');
-    } else if (VALLEYS[position]) {
-        specialMove = VALLEYS[position];
-        showTurnInfo(`${specialMove.name}! Falling to square ${specialMove.to}!`, 'danger');
-    }
-    
-    if (specialMove) {
+        const destination = MOUNTAINS[position].to;
+        const message = `${MOUNTAINS[position].name}! Climbing to ${destination}`;
+        
+        turnInfo.textContent = message;
+        turnInfo.className = 'turn-info success';
+        
         setTimeout(() => {
-            animatePlayerMovement(player.id, position, specialMove.to, () => {
-                player.position = specialMove.to;
-                positionPlayerPiece(player.id, specialMove.to);
-            });
-        }, 1500);
+            movePlayerToPosition(player, destination);
+        }, 1000);
+    } else if (VALLEYS[position]) {
+        const destination = VALLEYS[position].to;
+        const message = `${VALLEYS[position].name}! Falling to ${destination}`;
+        
+        turnInfo.textContent = message;
+        turnInfo.className = 'turn-info danger';
+        
+        setTimeout(() => {
+            movePlayerToPosition(player, destination);
+        }, 1000);
+    } else {
+        turnInfo.textContent = '';
+        turnInfo.className = 'turn-info';
     }
 }
 
-// Show turn info
-function showTurnInfo(message, type = 'info') {
-    const turnInfo = document.getElementById('turnInfo');
-    turnInfo.textContent = message;
-    turnInfo.className = `turn-info ${type}`;
+// Move player to specific position
+function movePlayerToPosition(player, newPosition) {
+    // Remove from current square
+    const currentSquare = player.element.parentElement;
+    if (currentSquare) {
+        currentSquare.removeChild(player.element);
+    }
     
-    setTimeout(() => {
-        turnInfo.textContent = '';
-    }, 3000);
+    // Update position
+    player.position = newPosition;
+    
+    // Add to new square
+    const newSquare = document.getElementById(`square-${newPosition}`);
+    if (newSquare) {
+        newSquare.appendChild(player.element);
+        positionPlayersOnSquare(newPosition);
+    }
 }
 
-// Next turn
-function nextTurn() {
-    gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-    updateCurrentPlayer();
-    document.getElementById('rollDice').disabled = false;
+// Position multiple players on same square
+function positionPlayersOnSquare(squareNum) {
+    const square = document.getElementById(`square-${squareNum}`);
+    const pieces = square.querySelectorAll('.player-piece');
+    
+    pieces.forEach((piece, index) => {
+        const offset = index * 15;
+        piece.style.transform = `translate(${offset}px, ${offset}px)`;
+    });
+}
+
+// Update current player display
+function updateCurrentPlayerDisplay() {
+    const player = gameState.players[gameState.currentPlayerIndex];
+    document.getElementById('currentPlayerName').textContent = player.name;
 }
 
 // End game
 function endGame(winner) {
     gameState.isGameActive = false;
-    document.getElementById('winPlayer').textContent = `${winner.name} wins!`;
+    document.getElementById('winPlayer').textContent = winner.name;
     document.getElementById('winOverlay').classList.remove('hidden');
-}
-
-// Reset game
-function resetGame() {
-    gameState = {
-        players: [],
-        currentPlayerIndex: 0,
-        isGameActive: false,
-        diceValue: 0
-    };
-    
-    document.getElementById('playerSetup').classList.remove('hidden');
-    document.getElementById('gameStatus').classList.add('hidden');
-    document.getElementById('winOverlay').classList.add('hidden');
-    document.getElementById('dice').querySelector('.dice-value').textContent = '?';
-    
-    // Remove player pieces
-    document.querySelectorAll('.player-piece').forEach(piece => piece.remove());
-    
-    saveGameState();
 }
 
 // Save game state to localStorage
 function saveGameState() {
-    localStorage.setItem('bureaucraticMountainsGameState', JSON.stringify(gameState));
+    localStorage.setItem('bureaucraticMountainsGame', JSON.stringify(gameState));
 }
 
 // Load game state from localStorage
 function loadGameState() {
-    const savedState = localStorage.getItem('bureaucraticMountainsGameState');
-    if (savedState) {
+    const saved = localStorage.getItem('bureaucraticMountainsGame');
+    if (saved && saved !== 'undefined') {
         try {
-            const parsed = JSON.parse(savedState);
-            if (parsed.isGameActive && parsed.players.length > 0) {
-                gameState = parsed;
+            const savedState = JSON.parse(saved);
+            
+            // Restore game state
+            if (savedState.players && savedState.players.length > 0) {
+                gameState = savedState;
                 
-                // Restore game UI
-                document.getElementById('playerSetup').classList.add('hidden');
-                document.getElementById('gameStatus').classList.remove('hidden');
-                
-                // Recreate player pieces
-                createPlayerPieces();
+                // Recreate player elements
                 gameState.players.forEach(player => {
-                    positionPlayerPiece(player.id, player.position);
+                    const piece = document.createElement('div');
+                    piece.className = `player-piece ${player.color}`;
+                    piece.textContent = player.id + 1;
+                    player.element = piece;
+                    
+                    const square = document.getElementById(`square-${player.position}`);
+                    if (square) {
+                        square.appendChild(piece);
+                    }
                 });
                 
-                updateCurrentPlayer();
+                // Update UI
+                document.getElementById('playerSetup').classList.add('hidden');
+                document.getElementById('gameStatus').classList.remove('hidden');
+                updateCurrentPlayerDisplay();
+                
+                // Position pieces
+                const positions = [...new Set(gameState.players.map(p => p.position))];
+                positions.forEach(pos => positionPlayersOnSquare(pos));
             }
         } catch (e) {
-            console.error('Failed to load game state:', e);
+            console.error('Error loading game state:', e);
+            localStorage.removeItem('bureaucraticMountainsGame');
         }
     }
 }
 
-// Initialize when DOM is ready
+// Initialize on load
 document.addEventListener('DOMContentLoaded', initGame);
-
-// Manual function to force redraw connections (for debugging)
-window.redrawConnections = function() {
-    console.log('Manually redrawing connections...');
-    drawBoardConnections();
-};
