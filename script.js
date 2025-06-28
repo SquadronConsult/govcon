@@ -191,6 +191,60 @@ function addSpecialConnections() {
     // Set viewBox to match board dimensions
     svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
     
+    // Create defs for gradients and patterns
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svg.appendChild(defs);
+    
+    // Create mountain gradient
+    const mountainGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    mountainGradient.setAttribute('id', 'mountainGradient');
+    mountainGradient.setAttribute('x1', '0%');
+    mountainGradient.setAttribute('y1', '100%');
+    mountainGradient.setAttribute('x2', '0%');
+    mountainGradient.setAttribute('y2', '0%');
+    
+    const mStop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    mStop1.setAttribute('offset', '0%');
+    mStop1.setAttribute('style', 'stop-color:#2e7d32;stop-opacity:0.8');
+    
+    const mStop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    mStop2.setAttribute('offset', '60%');
+    mStop2.setAttribute('style', 'stop-color:#388e3c;stop-opacity:0.7');
+    
+    const mStop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    mStop3.setAttribute('offset', '100%');
+    mStop3.setAttribute('style', 'stop-color:#81c784;stop-opacity:0.6');
+    
+    mountainGradient.appendChild(mStop1);
+    mountainGradient.appendChild(mStop2);
+    mountainGradient.appendChild(mStop3);
+    defs.appendChild(mountainGradient);
+    
+    // Create valley gradient
+    const valleyGradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    valleyGradient.setAttribute('id', 'valleyGradient');
+    valleyGradient.setAttribute('x1', '0%');
+    valleyGradient.setAttribute('y1', '0%');
+    valleyGradient.setAttribute('x2', '0%');
+    valleyGradient.setAttribute('y2', '100%');
+    
+    const vStop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    vStop1.setAttribute('offset', '0%');
+    vStop1.setAttribute('style', 'stop-color:#8d6e63;stop-opacity:0.6');
+    
+    const vStop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    vStop2.setAttribute('offset', '50%');
+    vStop2.setAttribute('style', 'stop-color:#6d4c41;stop-opacity:0.7');
+    
+    const vStop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    vStop3.setAttribute('offset', '100%');
+    vStop3.setAttribute('style', 'stop-color:#3e2723;stop-opacity:0.8');
+    
+    valleyGradient.appendChild(vStop1);
+    valleyGradient.appendChild(vStop2);
+    valleyGradient.appendChild(vStop3);
+    defs.appendChild(valleyGradient);
+    
     // Draw connections
     drawMountainConnections(svg, board, boardRect);
     drawValleyConnections(svg, board, boardRect);
@@ -206,7 +260,7 @@ function drawMountainConnections(svg, board, boardRect) {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, fromSquare, toSquare, boardRect, '#228B22', true);
+            drawMountainPath(svg, fromSquare, toSquare, boardRect);
         }
     });
 }
@@ -218,50 +272,141 @@ function drawValleyConnections(svg, board, boardRect) {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, fromSquare, toSquare, boardRect, '#d32f2f', false);
+            drawValleyPath(svg, fromSquare, toSquare, boardRect);
         }
     });
 }
 
-// Draw a curved path between two squares
-function drawCurvedPath(svg, fromSquare, toSquare, boardRect, color, isUpward) {
-    // Get square positions using getBoundingClientRect
+// Draw mountain path
+function drawMountainPath(svg, fromSquare, toSquare, boardRect) {
     const fromRect = fromSquare.getBoundingClientRect();
     const toRect = toSquare.getBoundingClientRect();
     
-    // Calculate centers relative to the board
     const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
     const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
     const toX = (toRect.left - boardRect.left) + toRect.width / 2;
     const toY = (toRect.top - boardRect.top) + toRect.height / 2;
     
-    // Create curved path
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    // Create group for mountain
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('opacity', '0.85');
     
-    // Calculate control point for curve
+    // Calculate mountain shape
     const midX = (fromX + toX) / 2;
     const midY = (fromY + toY) / 2;
-    const curveOffset = isUpward ? -40 : 40;
-    const controlY = midY + curveOffset;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const perpAngle = angle - Math.PI / 2;
+    const pathWidth = 35;
     
-    // Create path data
-    const pathData = `M ${fromX},${fromY} Q ${midX},${controlY} ${toX},${toY}`;
+    // Create mountain slope path
+    const mountain = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     
-    path.setAttribute('d', pathData);
-    path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '20');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '1');
-    path.setAttribute('stroke-linecap', 'round');
+    // Calculate offset points for one-sided mountain
+    const offset1X = fromX + Math.cos(perpAngle) * pathWidth;
+    const offset1Y = fromY + Math.sin(perpAngle) * pathWidth;
+    const offset2X = toX + Math.cos(perpAngle) * pathWidth;
+    const offset2Y = toY + Math.sin(perpAngle) * pathWidth;
     
-    svg.appendChild(path);
+    // Create peak point
+    const peakX = midX + Math.cos(perpAngle) * pathWidth * 0.3;
+    const peakY = midY + Math.sin(perpAngle) * pathWidth * 0.3 - 25;
     
-    console.log('Path added:', {
-        from: `${fromX},${fromY}`,
-        to: `${toX},${toY}`,
-        pathData,
-        color
-    });
+    // Mountain path with jagged edge
+    const mountainPath = `
+        M ${fromX},${fromY}
+        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.8},${fromY + Math.sin(perpAngle) * pathWidth * 0.8}
+        L ${midX - (toX - fromX) * 0.1 + Math.cos(perpAngle) * pathWidth * 0.9},${midY - (toY - fromY) * 0.1 + Math.sin(perpAngle) * pathWidth * 0.9}
+        L ${peakX},${peakY}
+        L ${midX + (toX - fromX) * 0.1 + Math.cos(perpAngle) * pathWidth * 0.9},${midY + (toY - fromY) * 0.1 + Math.sin(perpAngle) * pathWidth * 0.9}
+        L ${toX + Math.cos(perpAngle) * pathWidth * 0.8},${toY + Math.sin(perpAngle) * pathWidth * 0.8}
+        L ${toX},${toY}
+        Z
+    `;
+    
+    mountain.setAttribute('d', mountainPath);
+    mountain.setAttribute('fill', 'url(#mountainGradient)');
+    mountain.setAttribute('stroke', '#2e7d32');
+    mountain.setAttribute('stroke-width', '1');
+    
+    // Add snow cap
+    const snowCap = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const snowPath = `
+        M ${peakX - 10},${peakY + 8}
+        Q ${peakX},${peakY - 2} ${peakX + 10},${peakY + 8}
+        L ${peakX + 5},${peakY + 12}
+        Q ${peakX},${peakY + 10} ${peakX - 5},${peakY + 12}
+        Z
+    `;
+    snowCap.setAttribute('d', snowPath);
+    snowCap.setAttribute('fill', 'rgba(255, 255, 255, 0.8)');
+    snowCap.setAttribute('stroke', 'none');
+    
+    g.appendChild(mountain);
+    g.appendChild(snowCap);
+    svg.appendChild(g);
+}
+
+// Draw valley path
+function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
+    const fromRect = fromSquare.getBoundingClientRect();
+    const toRect = toSquare.getBoundingClientRect();
+    
+    const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
+    const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
+    const toX = (toRect.left - boardRect.left) + toRect.width / 2;
+    const toY = (toRect.top - boardRect.top) + toRect.height / 2;
+    
+    // Create group for valley
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('opacity', '0.85');
+    
+    // Calculate valley shape
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const perpAngle = angle + Math.PI / 2;
+    const pathWidth = 35;
+    
+    // Create valley canyon path
+    const valley = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    
+    // Create canyon depth point
+    const canyonX = midX + Math.cos(perpAngle) * pathWidth * 0.3;
+    const canyonY = midY + Math.sin(perpAngle) * pathWidth * 0.3 + 20;
+    
+    // Valley path with rocky edges
+    const valleyPath = `
+        M ${fromX},${fromY}
+        L ${fromX + Math.cos(perpAngle) * pathWidth * 0.7},${fromY + Math.sin(perpAngle) * pathWidth * 0.7}
+        L ${midX - (toX - fromX) * 0.15 + Math.cos(perpAngle) * pathWidth * 0.85},${midY - (toY - fromY) * 0.15 + Math.sin(perpAngle) * pathWidth * 0.85}
+        L ${canyonX},${canyonY}
+        L ${midX + (toX - fromX) * 0.15 + Math.cos(perpAngle) * pathWidth * 0.85},${midY + (toY - fromY) * 0.15 + Math.sin(perpAngle) * pathWidth * 0.85}
+        L ${toX + Math.cos(perpAngle) * pathWidth * 0.7},${toY + Math.sin(perpAngle) * pathWidth * 0.7}
+        L ${toX},${toY}
+        Z
+    `;
+    
+    valley.setAttribute('d', valleyPath);
+    valley.setAttribute('fill', 'url(#valleyGradient)');
+    valley.setAttribute('stroke', '#3e2723');
+    valley.setAttribute('stroke-width', '1');
+    
+    // Add rocky debris
+    for (let i = 0; i < 5; i++) {
+        const rock = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        const t = 0.2 + (i * 0.15);
+        const rockX = fromX + (toX - fromX) * t + Math.cos(perpAngle) * pathWidth * (0.3 + Math.random() * 0.3);
+        const rockY = fromY + (toY - fromY) * t + Math.sin(perpAngle) * pathWidth * (0.3 + Math.random() * 0.3);
+        rock.setAttribute('cx', rockX);
+        rock.setAttribute('cy', rockY);
+        rock.setAttribute('r', 2 + Math.random() * 2);
+        rock.setAttribute('fill', '#5d4037');
+        rock.setAttribute('opacity', '0.6');
+        g.appendChild(rock);
+    }
+    
+    g.appendChild(valley);
+    svg.appendChild(g);
 }
 
 
