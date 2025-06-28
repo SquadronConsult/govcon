@@ -344,6 +344,43 @@ function drawMountainPath(svg, fromSquare, toSquare, boardRect) {
     
     g.appendChild(ridge);
     
+    // Add rocks and pebbles
+    for (let i = 0; i < 12; i++) {
+        const t = Math.random();
+        const rockX = fromX + (toX - fromX) * t + (Math.random() - 0.5) * 20;
+        const rockY = fromY + (toY - fromY) * t + (Math.random() - 0.5) * 20;
+        
+        if (i < 4) {
+            // Larger rocks
+            const rock = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const size = 3 + Math.random() * 3;
+            const points = [];
+            const vertices = 4 + Math.floor(Math.random() * 2);
+            
+            for (let j = 0; j < vertices; j++) {
+                const angle = (j / vertices) * Math.PI * 2;
+                const radius = size * (0.7 + Math.random() * 0.3);
+                const x = rockX + Math.cos(angle) * radius;
+                const y = rockY + Math.sin(angle) * radius;
+                points.push(`${x},${y}`);
+            }
+            
+            rock.setAttribute('points', points.join(' '));
+            rock.setAttribute('fill', '#5d4037');
+            rock.setAttribute('opacity', '0.4');
+            g.appendChild(rock);
+        } else {
+            // Smaller pebbles
+            const pebble = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            pebble.setAttribute('cx', rockX);
+            pebble.setAttribute('cy', rockY);
+            pebble.setAttribute('r', 1 + Math.random() * 1.5);
+            pebble.setAttribute('fill', '#6d4c41');
+            pebble.setAttribute('opacity', '0.3');
+            g.appendChild(pebble);
+        }
+    }
+    
     svg.appendChild(g);
 }
 
@@ -427,6 +464,47 @@ function drawValleyPath(svg, fromSquare, toSquare, boardRect) {
     depthLine.setAttribute('fill', 'none');
     
     g.appendChild(depthLine);
+    
+    // Add rocks and pebbles in the canyon
+    for (let i = 0; i < 15; i++) {
+        const t = 0.1 + Math.random() * 0.8;
+        const baseX = fromX + (toX - fromX) * t;
+        const baseY = fromY + (toY - fromY) * t;
+        // Place rocks inside the canyon
+        const offsetDist = pathWidth * (0.1 + Math.random() * 0.5);
+        const rockX = baseX + Math.cos(perpAngle) * offsetDist;
+        const rockY = baseY + Math.sin(perpAngle) * offsetDist;
+        
+        if (i < 5) {
+            // Larger rocks
+            const rock = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            const size = 2.5 + Math.random() * 2.5;
+            const points = [];
+            const vertices = 4 + Math.floor(Math.random() * 2);
+            
+            for (let j = 0; j < vertices; j++) {
+                const angle = (j / vertices) * Math.PI * 2;
+                const radius = size * (0.6 + Math.random() * 0.4);
+                const x = rockX + Math.cos(angle) * radius;
+                const y = rockY + Math.sin(angle) * radius * 1.2; // Slightly elongated vertically
+                points.push(`${x},${y}`);
+            }
+            
+            rock.setAttribute('points', points.join(' '));
+            rock.setAttribute('fill', '#6d4c41');
+            rock.setAttribute('opacity', '0.5');
+            g.appendChild(rock);
+        } else {
+            // Smaller pebbles and debris
+            const pebble = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            pebble.setAttribute('cx', rockX);
+            pebble.setAttribute('cy', rockY);
+            pebble.setAttribute('r', 0.8 + Math.random() * 1.2);
+            pebble.setAttribute('fill', '#5d4037');
+            pebble.setAttribute('opacity', '0.4');
+            g.appendChild(pebble);
+        }
+    }
     
     svg.appendChild(g);
 }
