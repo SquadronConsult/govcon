@@ -71,25 +71,33 @@ function createBoard() {
         square.className = 'square';
         square.id = `square-${i}`;
         
-        // Add elevation zones
+        // Create background layer
+        const bgLayer = document.createElement('div');
+        bgLayer.className = 'square-background';
+        
+        // Add elevation zones to background layer
         if (i <= 20) {
-            square.classList.add('valley-zone');
+            bgLayer.classList.add('valley-zone');
         } else if (i <= 40) {
-            square.classList.add('mountain-zone-1');
+            bgLayer.classList.add('mountain-zone-1');
         } else if (i <= 60) {
-            square.classList.add('funding-valley');
+            bgLayer.classList.add('funding-valley');
         } else if (i <= 80) {
-            square.classList.add('mountain-zone-2');
+            bgLayer.classList.add('mountain-zone-2');
         } else {
-            square.classList.add('deployment-plateau');
+            bgLayer.classList.add('deployment-plateau');
         }
+        
+        // Create content layer
+        const contentLayer = document.createElement('div');
+        contentLayer.className = 'square-content';
         
         // Mark special squares
         if (MOUNTAINS[i]) {
-            square.classList.add('mountain');
+            contentLayer.classList.add('mountain');
             square.setAttribute('data-to', MOUNTAINS[i].to);
         } else if (VALLEYS[i]) {
-            square.classList.add('valley');
+            contentLayer.classList.add('valley');
             square.setAttribute('data-to', VALLEYS[i].to);
         }
         
@@ -97,31 +105,34 @@ function createBoard() {
         const numberSpan = document.createElement('span');
         numberSpan.className = 'square-number';
         numberSpan.textContent = i;
-        square.appendChild(numberSpan);
+        contentLayer.appendChild(numberSpan);
         
         // Add labels for special squares
         if (i === 1) {
             const label = document.createElement('div');
             label.className = 'square-label start-label';
             label.textContent = 'START';
-            square.appendChild(label);
+            contentLayer.appendChild(label);
         } else if (i === 100) {
             const label = document.createElement('div');
             label.className = 'square-label finish-label';
             label.textContent = 'DEPLOYMENT';
-            square.appendChild(label);
+            contentLayer.appendChild(label);
         } else if (MOUNTAINS[i]) {
             const label = document.createElement('div');
             label.className = 'square-label';
             label.textContent = MOUNTAINS[i].name;
-            square.appendChild(label);
+            contentLayer.appendChild(label);
         } else if (VALLEYS[i]) {
             const label = document.createElement('div');
             label.className = 'square-label';
             label.textContent = VALLEYS[i].name;
-            square.appendChild(label);
+            contentLayer.appendChild(label);
         }
         
+        // Append layers to square
+        square.appendChild(bgLayer);
+        square.appendChild(contentLayer);
         board.appendChild(square);
     }
     
@@ -175,21 +186,10 @@ function addSpecialConnections() {
     svg.style.width = boardRect.width + 'px';
     svg.style.height = boardRect.height + 'px';
     svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '1'; // Move back another layer
-    svg.style.backgroundColor = 'rgba(255, 255, 0, 0.2)'; // Yellow background to see SVG
+    svg.style.zIndex = '1'; // Between background and content layers
     
     // Set viewBox to match board dimensions
     svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
-    
-    // Add a test circle to verify SVG is working
-    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    testCircle.setAttribute('cx', boardRect.width / 2);
-    testCircle.setAttribute('cy', boardRect.height / 2);
-    testCircle.setAttribute('r', '50');
-    testCircle.setAttribute('fill', 'red');
-    testCircle.setAttribute('stroke', 'black');
-    testCircle.setAttribute('stroke-width', '3');
-    svg.appendChild(testCircle);
     
     // Draw connections
     drawMountainConnections(svg, board, boardRect);
@@ -197,8 +197,6 @@ function addSpecialConnections() {
     
     // Append SVG to wrapper
     boardWrapper.appendChild(svg);
-    
-    console.log('SVG added with', svg.children.length, 'children');
 }
 
 // Draw mountain connections
@@ -311,7 +309,11 @@ function startNewGame(numPlayers) {
         piece.className = `player-piece ${player.color}`;
         piece.textContent = player.id + 1;
         player.element = piece;
-        document.getElementById('square-1').appendChild(piece);
+        const startSquare = document.getElementById('square-1');
+        const startContent = startSquare.querySelector('.square-content');
+        if (startContent) {
+            startContent.appendChild(piece);
+        }
         player.position = 1;
     });
     
@@ -399,7 +401,10 @@ function animatePlayerMovement(player, fromPos, toPos, callback) {
         // Add to new square
         const newSquare = document.getElementById(`square-${player.position}`);
         if (newSquare) {
-            newSquare.appendChild(player.element);
+            const contentLayer = newSquare.querySelector('.square-content');
+            if (contentLayer) {
+                contentLayer.appendChild(player.element);
+            }
             positionPlayersOnSquare(player.position);
         }
         
@@ -456,7 +461,10 @@ function movePlayerToPosition(player, newPosition) {
     // Add to new square
     const newSquare = document.getElementById(`square-${newPosition}`);
     if (newSquare) {
-        newSquare.appendChild(player.element);
+        const contentLayer = newSquare.querySelector('.square-content');
+        if (contentLayer) {
+            contentLayer.appendChild(player.element);
+        }
         positionPlayersOnSquare(newPosition);
     }
 }
@@ -464,7 +472,8 @@ function movePlayerToPosition(player, newPosition) {
 // Position multiple players on same square
 function positionPlayersOnSquare(squareNum) {
     const square = document.getElementById(`square-${squareNum}`);
-    const pieces = square.querySelectorAll('.player-piece');
+    const contentLayer = square.querySelector('.square-content');
+    const pieces = contentLayer ? contentLayer.querySelectorAll('.player-piece') : [];
     
     pieces.forEach((piece, index) => {
         const offset = index * 15;
@@ -510,7 +519,10 @@ function loadGameState() {
                     
                     const square = document.getElementById(`square-${player.position}`);
                     if (square) {
-                        square.appendChild(piece);
+                        const contentLayer = square.querySelector('.square-content');
+                        if (contentLayer) {
+                            contentLayer.appendChild(piece);
+                        }
                     }
                 });
                 

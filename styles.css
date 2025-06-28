@@ -276,52 +276,69 @@ html {
 
 .square {
     aspect-ratio: 1;
+    position: relative;
+    transition: all 0.3s;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+/* Square background layer */
+.square-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: white;
+}
+
+/* Square content layer */
+.square-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
     font-size: 0.9em;
-    position: relative;
-    transition: all 0.3s;
     border: 1px solid var(--square-border);
-    cursor: pointer;
-    overflow: hidden;
-    background: white;
     z-index: 2;
 }
 
 /* Elevation zones */
-.square.valley-zone {
+.square-background.valley-zone {
     background: var(--valley-bg);
 }
 
-.square.mountain-zone-1 {
+.square-background.mountain-zone-1 {
     background: var(--mountain-bg);
 }
 
-.square.funding-valley {
+.square-background.funding-valley {
     background: var(--funding-valley);
 }
 
-.square.mountain-zone-2 {
+.square-background.mountain-zone-2 {
     background: var(--peak-bg);
 }
 
-.square.deployment-plateau {
+.square-background.deployment-plateau {
     background: var(--plateau-bg);
 }
 
 /* Special squares */
-.square.mountain {
+.square-content.mountain {
     border: 3px solid var(--mountain-green);
     box-shadow: inset 0 0 10px rgba(90, 143, 82, 0.3);
-    position: relative;
 }
 
-.square.valley {
+.square-content.valley {
     border: 3px solid var(--valley-red);
     box-shadow: inset 0 0 10px rgba(192, 57, 43, 0.3);
-    position: relative;
 }
 
 
@@ -373,7 +390,7 @@ html {
     font-weight: bold;
     color: white;
     font-size: 0.9em;
-    z-index: 10;
+    z-index: 3;
     border: 2px solid white;
 }
 
