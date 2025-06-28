@@ -168,12 +168,21 @@ function addSpecialConnections() {
     const boardRect = board.getBoundingClientRect();
     const wrapperRect = boardWrapper.getBoundingClientRect();
     
-    // Position SVG to overlay the board exactly
+    // Position SVG to overlay the board content area (inside padding)
+    const boardStyles = window.getComputedStyle(board);
+    const paddingLeft = parseFloat(boardStyles.paddingLeft);
+    const paddingTop = parseFloat(boardStyles.paddingTop);
+    const paddingRight = parseFloat(boardStyles.paddingRight);
+    const paddingBottom = parseFloat(boardStyles.paddingBottom);
+    
+    const contentWidth = boardRect.width - paddingLeft - paddingRight;
+    const contentHeight = boardRect.height - paddingTop - paddingBottom;
+    
     svg.style.position = 'absolute';
-    svg.style.left = (boardRect.left - wrapperRect.left) + 'px';
-    svg.style.top = (boardRect.top - wrapperRect.top) + 'px';
-    svg.style.width = boardRect.width + 'px';
-    svg.style.height = boardRect.height + 'px';
+    svg.style.left = (boardRect.left - wrapperRect.left + paddingLeft) + 'px';
+    svg.style.top = (boardRect.top - wrapperRect.top + paddingTop) + 'px';
+    svg.style.width = contentWidth + 'px';
+    svg.style.height = contentHeight + 'px';
     svg.style.pointerEvents = 'none';
     svg.style.zIndex = '1';
     
@@ -186,19 +195,10 @@ function addSpecialConnections() {
         wrapperRect
     });
     
-    // Set viewBox to match board dimensions
-    svg.setAttribute('viewBox', `0 0 ${boardRect.width} ${boardRect.height}`);
+    // Set viewBox to match content dimensions
+    svg.setAttribute('viewBox', `0 0 ${contentWidth} ${contentHeight}`);
     
-    // Add debug background to verify SVG is visible
-    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    bgRect.setAttribute('x', '0');
-    bgRect.setAttribute('y', '0');
-    bgRect.setAttribute('width', boardRect.width);
-    bgRect.setAttribute('height', boardRect.height);
-    bgRect.setAttribute('fill', 'rgba(255, 0, 0, 0.1)');
-    bgRect.setAttribute('stroke', 'red');
-    bgRect.setAttribute('stroke-width', '2');
-    svg.appendChild(bgRect);
+    // Remove debug background - paths should now be visible
     
     // Draw connections
     drawMountainConnections(svg, board);
@@ -237,15 +237,11 @@ function drawValleyConnections(svg, board) {
 
 // Draw a curved path between two squares
 function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
-    const boardRect = board.getBoundingClientRect();
-    const fromRect = fromSquare.getBoundingClientRect();
-    const toRect = toSquare.getBoundingClientRect();
-    
-    // Calculate centers relative to the board
-    const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
-    const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
-    const toX = (toRect.left - boardRect.left) + toRect.width / 2;
-    const toY = (toRect.top - boardRect.top) + toRect.height / 2;
+    // Get positions using offsetLeft/offsetTop which are relative to the positioned parent (board)
+    const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2;
+    const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2;
+    const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2;
+    const toY = toSquare.offsetTop + toSquare.offsetHeight / 2;
     
     // Create curved path
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -261,9 +257,9 @@ function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
     
     path.setAttribute('d', pathData);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '10');
+    path.setAttribute('stroke-width', '15');
     path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '0.6');
+    path.setAttribute('opacity', '0.8');
     path.setAttribute('stroke-linecap', 'round');
     
     svg.appendChild(path);
