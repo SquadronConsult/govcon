@@ -174,7 +174,7 @@ function addSpecialConnections() {
     svg.style.width = '100%';
     svg.style.height = '100%';
     svg.style.pointerEvents = 'none';
-    svg.style.backgroundColor = 'rgba(255, 0, 0, 0.1)'; // Debug background
+    // svg.style.backgroundColor = 'rgba(255, 0, 0, 0.1)'; // Debug background
     
     // Set viewBox - include padding in dimensions
     const boardWidth = board.offsetWidth;
@@ -184,14 +184,16 @@ function addSpecialConnections() {
     
     console.log('SVG dimensions:', boardWidth, 'x', boardHeight);
     
-    // Add a test circle to verify SVG is rendering
-    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    testCircle.setAttribute('cx', '400');
-    testCircle.setAttribute('cy', '400');
-    testCircle.setAttribute('r', '50');
-    testCircle.setAttribute('fill', 'red');
-    testCircle.setAttribute('opacity', '0.5');
-    svg.appendChild(testCircle);
+    // Debug: Add background rect to see SVG bounds
+    const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bgRect.setAttribute('x', '0');
+    bgRect.setAttribute('y', '0');
+    bgRect.setAttribute('width', boardWidth);
+    bgRect.setAttribute('height', boardHeight);
+    bgRect.setAttribute('fill', 'none');
+    bgRect.setAttribute('stroke', 'blue');
+    bgRect.setAttribute('stroke-width', '2');
+    svg.appendChild(bgRect);
     
     // Draw simple lines for mountains
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
@@ -199,12 +201,18 @@ function addSpecialConnections() {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            // Account for board padding (20px)
-            const boardPadding = 20;
-            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2 + boardPadding;
-            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2 + boardPadding;
-            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2 + boardPadding;
-            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2 + boardPadding;
+            // Get bounding rectangles
+            const boardRect = board.getBoundingClientRect();
+            const fromRect = fromSquare.getBoundingClientRect();
+            const toRect = toSquare.getBoundingClientRect();
+            
+            // Calculate positions relative to the board
+            const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
+            const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
+            const toX = (toRect.left - boardRect.left) + toRect.width / 2;
+            const toY = (toRect.top - boardRect.top) + toRect.height / 2;
+            
+            console.log(`Mountain ${from}->${data.to} coords:`, {fromX, fromY, toX, toY, boardRect});
             
             // Create thick green path for mountain
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -213,9 +221,10 @@ function addSpecialConnections() {
             
             path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
             path.setAttribute('stroke', '#228B22');
-            path.setAttribute('stroke-width', '8');
+            path.setAttribute('stroke-width', '15');
             path.setAttribute('fill', 'none');
-            path.setAttribute('opacity', '0.7');
+            path.setAttribute('opacity', '0.8');
+            path.setAttribute('stroke-linecap', 'round');
             svg.appendChild(path);
             
             console.log(`Mountain ${from}->${data.to} drawn`);
@@ -228,12 +237,16 @@ function addSpecialConnections() {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            // Account for board padding (20px)
-            const boardPadding = 20;
-            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2 + boardPadding;
-            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2 + boardPadding;
-            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2 + boardPadding;
-            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2 + boardPadding;
+            // Get bounding rectangles
+            const boardRect = board.getBoundingClientRect();
+            const fromRect = fromSquare.getBoundingClientRect();
+            const toRect = toSquare.getBoundingClientRect();
+            
+            // Calculate positions relative to the board
+            const fromX = (fromRect.left - boardRect.left) + fromRect.width / 2;
+            const fromY = (fromRect.top - boardRect.top) + fromRect.height / 2;
+            const toX = (toRect.left - boardRect.left) + toRect.width / 2;
+            const toY = (toRect.top - boardRect.top) + toRect.height / 2;
             
             // Create thick red path for valley
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -242,9 +255,10 @@ function addSpecialConnections() {
             
             path.setAttribute('d', `M ${fromX} ${fromY} Q ${midX} ${midY}, ${toX} ${toY}`);
             path.setAttribute('stroke', '#d32f2f');
-            path.setAttribute('stroke-width', '8');
+            path.setAttribute('stroke-width', '15');
             path.setAttribute('fill', 'none');
-            path.setAttribute('opacity', '0.7');
+            path.setAttribute('opacity', '0.8');
+            path.setAttribute('stroke-linecap', 'round');
             svg.appendChild(path);
             
             console.log(`Valley ${from}->${data.to} drawn`);
