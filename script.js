@@ -126,7 +126,7 @@ function createBoard() {
         } else if (i === 100) {
             const label = document.createElement('div');
             label.className = 'square-label finish-label';
-            label.textContent = 'DEPLOYMENT';
+            label.textContent = 'PROGRAM OF RECORD';
             contentLayer.appendChild(label);
         } else if (MOUNTAINS[i]) {
             const label = document.createElement('div');

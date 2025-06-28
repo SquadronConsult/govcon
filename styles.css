@@ -367,17 +367,19 @@ html {
 
 .start-label, .finish-label {
     font-weight: bold;
-    font-size: 0.8em;
 }
 
 .start-label {
+    font-size: 0.8em;
     color: #2e7d32;
     text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.9);
 }
 
 .finish-label {
+    font-size: 0.5em;
     color: #d32f2f;
     text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.9);
+    line-height: 1.2;
 }
 
 /* Player pieces */
@@ -724,8 +726,12 @@ html {
         line-height: 1;
     }
     
-    .start-label, .finish-label {
+    .start-label {
         font-size: 0.6em;
+    }
+    
+    .finish-label {
+        font-size: 0.4em;
     }
     
     .player-piece {
