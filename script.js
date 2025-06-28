@@ -174,13 +174,24 @@ function addSpecialConnections() {
     svg.style.width = '100%';
     svg.style.height = '100%';
     svg.style.pointerEvents = 'none';
+    svg.style.backgroundColor = 'rgba(255, 0, 0, 0.1)'; // Debug background
     
-    // Set viewBox
+    // Set viewBox - include padding in dimensions
     const boardWidth = board.offsetWidth;
     const boardHeight = board.offsetHeight;
     svg.setAttribute('viewBox', `0 0 ${boardWidth} ${boardHeight}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     
     console.log('SVG dimensions:', boardWidth, 'x', boardHeight);
+    
+    // Add a test circle to verify SVG is rendering
+    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    testCircle.setAttribute('cx', '400');
+    testCircle.setAttribute('cy', '400');
+    testCircle.setAttribute('r', '50');
+    testCircle.setAttribute('fill', 'red');
+    testCircle.setAttribute('opacity', '0.5');
+    svg.appendChild(testCircle);
     
     // Draw simple lines for mountains
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
@@ -188,10 +199,12 @@ function addSpecialConnections() {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2;
-            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2;
-            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2;
-            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2;
+            // Account for board padding (20px)
+            const boardPadding = 20;
+            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2 + boardPadding;
+            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2 + boardPadding;
+            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2 + boardPadding;
+            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2 + boardPadding;
             
             // Create thick green path for mountain
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -215,10 +228,12 @@ function addSpecialConnections() {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2;
-            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2;
-            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2;
-            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2;
+            // Account for board padding (20px)
+            const boardPadding = 20;
+            const fromX = fromSquare.offsetLeft + fromSquare.offsetWidth / 2 + boardPadding;
+            const fromY = fromSquare.offsetTop + fromSquare.offsetHeight / 2 + boardPadding;
+            const toX = toSquare.offsetLeft + toSquare.offsetWidth / 2 + boardPadding;
+            const toY = toSquare.offsetTop + toSquare.offsetHeight / 2 + boardPadding;
             
             // Create thick red path for valley
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -236,10 +251,10 @@ function addSpecialConnections() {
         }
     });
     
-    // Append to board wrapper
+    // Insert SVG before the board (so it renders behind)
     const boardWrapper = board.parentElement;
     if (boardWrapper && boardWrapper.classList.contains('board-wrapper')) {
-        boardWrapper.appendChild(svg);
+        boardWrapper.insertBefore(svg, board);
         console.log('Simple graphics added to board wrapper');
     }
 }
