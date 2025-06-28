@@ -36,10 +36,10 @@ function initGame() {
     createBoard();
     setupEventListeners();
     
-    // Draw connections after board is ready
+    // Draw connections after board is ready with longer delay
     setTimeout(() => {
         drawBoardConnections();
-    }, 100);
+    }, 500);
     
     // Redraw on window resize
     let resizeTimeout;
@@ -55,9 +55,12 @@ function initGame() {
 
 // Draw board connections
 function drawBoardConnections() {
-    const svg = document.querySelector('.board svg');
-    if (svg) svg.remove();
-    addSpecialConnections();
+    // Wait for next frame to ensure layout is complete
+    requestAnimationFrame(() => {
+        const svg = document.querySelector('.board svg');
+        if (svg) svg.remove();
+        addSpecialConnections();
+    });
 }
 
 // Create game board
@@ -200,16 +203,29 @@ function drawMountain(svg, fromNum, toNum) {
     const fromSquare = document.getElementById(`square-${fromNum}`);
     const toSquare = document.getElementById(`square-${toNum}`);
     
-    if (!fromSquare || !toSquare) return;
+    if (!fromSquare || !toSquare) {
+        console.error('Mountain squares not found:', fromNum, toNum);
+        return;
+    }
     
+    // Get board directly by ID since SVG isn't attached yet
+    const board = document.getElementById('gameBoard');
+    if (!board) {
+        console.error('Board not found');
+        return;
+    }
+    
+    const boardRect = board.getBoundingClientRect();
     const fromRect = fromSquare.getBoundingClientRect();
     const toRect = toSquare.getBoundingClientRect();
-    const boardRect = svg.parentElement.getBoundingClientRect();
     
+    // Calculate positions relative to board
     const fromX = fromRect.left + fromRect.width / 2 - boardRect.left;
     const fromY = fromRect.top + fromRect.height / 2 - boardRect.top;
     const toX = toRect.left + toRect.width / 2 - boardRect.left;
     const toY = toRect.top + toRect.height / 2 - boardRect.top;
+    
+    console.log(`Drawing mountain from ${fromNum} (${fromX},${fromY}) to ${toNum} (${toX},${toY})`);
     
     // Create mountain group
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -313,16 +329,28 @@ function drawValley(svg, fromNum, toNum) {
     const fromSquare = document.getElementById(`square-${fromNum}`);
     const toSquare = document.getElementById(`square-${toNum}`);
     
-    if (!fromSquare || !toSquare) return;
+    if (!fromSquare || !toSquare) {
+        console.error('Valley squares not found:', fromNum, toNum);
+        return;
+    }
     
+    // Get board directly by ID since SVG isn't attached yet
+    const board = document.getElementById('gameBoard');
+    if (!board) {
+        console.error('Board not found');
+        return;
+    }
+    
+    const boardRect = board.getBoundingClientRect();
     const fromRect = fromSquare.getBoundingClientRect();
     const toRect = toSquare.getBoundingClientRect();
-    const boardRect = svg.parentElement.getBoundingClientRect();
     
     const fromX = fromRect.left + fromRect.width / 2 - boardRect.left;
     const fromY = fromRect.top + fromRect.height / 2 - boardRect.top;
     const toX = toRect.left + toRect.width / 2 - boardRect.left;
     const toY = toRect.top + toRect.height / 2 - boardRect.top;
+    
+    console.log(`Drawing valley from ${fromNum} (${fromX},${fromY}) to ${toNum} (${toX},${toY})`);
     
     // Create valley group
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -484,10 +512,10 @@ function startNewGame(playerCount) {
     updateCurrentPlayer();
     saveGameState();
     
-    // Redraw connections to ensure they're visible
+    // Redraw connections to ensure they're visible with longer delay
     setTimeout(() => {
         drawBoardConnections();
-    }, 100);
+    }, 500);
 }
 
 // Create player pieces on board
@@ -717,3 +745,9 @@ function loadGameState() {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initGame);
+
+// Manual function to force redraw connections (for debugging)
+window.redrawConnections = function() {
+    console.log('Manually redrawing connections...');
+    drawBoardConnections();
+};
