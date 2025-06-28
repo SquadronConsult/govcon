@@ -65,8 +65,10 @@ function createBoard() {
         // Mark special squares
         if (MOUNTAINS[i]) {
             square.classList.add('mountain');
+            square.setAttribute('data-to', MOUNTAINS[i].to);
         } else if (VALLEYS[i]) {
             square.classList.add('valley');
+            square.setAttribute('data-to', VALLEYS[i].to);
         }
         
         // Add square number
@@ -83,11 +85,27 @@ function createBoard() {
             square.appendChild(label);
         }
         
+        // Add START and FINISH labels
+        if (i === 1) {
+            const startLabel = document.createElement('span');
+            startLabel.className = 'square-label start-label';
+            startLabel.textContent = 'START';
+            square.appendChild(startLabel);
+        } else if (i === 100) {
+            const finishLabel = document.createElement('span');
+            finishLabel.className = 'square-label finish-label';
+            finishLabel.textContent = 'DEPLOYMENT!';
+            square.appendChild(finishLabel);
+        }
+        
         board.appendChild(square);
     }
     
     // Rearrange squares for snake pattern
     rearrangeBoardSnakePattern();
+    
+    // Add visual connections for mountains and valleys
+    addSpecialConnections();
 }
 
 // Rearrange board in snake pattern
@@ -109,6 +127,81 @@ function rearrangeBoardSnakePattern() {
     
     board.innerHTML = '';
     rearranged.forEach(square => board.appendChild(square));
+}
+
+// Add visual connections for special squares
+function addSpecialConnections() {
+    const board = document.getElementById('gameBoard');
+    
+    // Create SVG overlay for drawing connections
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.style.position = 'absolute';
+    svg.style.top = '0';
+    svg.style.left = '0';
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.pointerEvents = 'none';
+    svg.style.zIndex = '5';
+    
+    // Draw connections for mountains (green arrows up)
+    Object.entries(MOUNTAINS).forEach(([from, data]) => {
+        drawConnection(svg, parseInt(from), data.to, 'mountain');
+    });
+    
+    // Draw connections for valleys (red arrows down)
+    Object.entries(VALLEYS).forEach(([from, data]) => {
+        drawConnection(svg, parseInt(from), data.to, 'valley');
+    });
+    
+    board.appendChild(svg);
+}
+
+// Draw connection line between squares
+function drawConnection(svg, fromNum, toNum, type) {
+    const fromSquare = document.getElementById(`square-${fromNum}`);
+    const toSquare = document.getElementById(`square-${toNum}`);
+    
+    if (!fromSquare || !toSquare) return;
+    
+    const fromRect = fromSquare.getBoundingClientRect();
+    const toRect = toSquare.getBoundingClientRect();
+    const boardRect = svg.parentElement.getBoundingClientRect();
+    
+    const fromX = fromRect.left + fromRect.width / 2 - boardRect.left;
+    const fromY = fromRect.top + fromRect.height / 2 - boardRect.top;
+    const toX = toRect.left + toRect.width / 2 - boardRect.left;
+    const toY = toRect.top + toRect.height / 2 - boardRect.top;
+    
+    // Create path
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = `M ${fromX} ${fromY} Q ${(fromX + toX) / 2} ${(fromY + toY) / 2 - 50} ${toX} ${toY}`;
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', type === 'mountain' ? '#5a8f52' : '#c0392b');
+    path.setAttribute('stroke-width', '3');
+    path.setAttribute('stroke-dasharray', '5,5');
+    path.setAttribute('opacity', '0.4');
+    
+    // Add arrow marker
+    const markerId = `arrow-${type}-${fromNum}`;
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', markerId);
+    marker.setAttribute('markerWidth', '10');
+    marker.setAttribute('markerHeight', '10');
+    marker.setAttribute('refX', '8');
+    marker.setAttribute('refY', '3');
+    marker.setAttribute('orient', 'auto');
+    marker.setAttribute('markerUnits', 'strokeWidth');
+    
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    arrow.setAttribute('d', 'M0,0 L0,6 L9,3 z');
+    arrow.setAttribute('fill', type === 'mountain' ? '#5a8f52' : '#c0392b');
+    
+    marker.appendChild(arrow);
+    svg.appendChild(marker);
+    path.setAttribute('marker-end', `url(#${markerId})`);
+    
+    svg.appendChild(path);
 }
 
 // Setup event listeners
