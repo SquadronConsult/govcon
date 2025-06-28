@@ -198,7 +198,15 @@ function addSpecialConnections() {
     // Set viewBox to match content dimensions
     svg.setAttribute('viewBox', `0 0 ${contentWidth} ${contentHeight}`);
     
-    // Remove debug background - paths should now be visible
+    // Add a test circle to verify SVG is working
+    const testCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    testCircle.setAttribute('cx', contentWidth / 2);
+    testCircle.setAttribute('cy', contentHeight / 2);
+    testCircle.setAttribute('r', '50');
+    testCircle.setAttribute('fill', 'yellow');
+    testCircle.setAttribute('stroke', 'black');
+    testCircle.setAttribute('stroke-width', '3');
+    svg.appendChild(testCircle);
     
     // Draw connections
     drawMountainConnections(svg, board);
@@ -218,7 +226,7 @@ function drawMountainConnections(svg, board) {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, board, fromSquare, toSquare, '#228B22', true);
+            drawCurvedPath(svg, board, fromSquare, toSquare, '#00FF00', true); // Bright green
         }
     });
 }
@@ -230,7 +238,7 @@ function drawValleyConnections(svg, board) {
         const toSquare = document.getElementById(`square-${data.to}`);
         
         if (fromSquare && toSquare) {
-            drawCurvedPath(svg, board, fromSquare, toSquare, '#d32f2f', false);
+            drawCurvedPath(svg, board, fromSquare, toSquare, '#FF0000', false); // Bright red
         }
     });
 }
@@ -257,9 +265,9 @@ function drawCurvedPath(svg, board, fromSquare, toSquare, color, isUpward) {
     
     path.setAttribute('d', pathData);
     path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '15');
+    path.setAttribute('stroke-width', '20');
     path.setAttribute('fill', 'none');
-    path.setAttribute('opacity', '0.8');
+    path.setAttribute('opacity', '1'); // Full opacity
     path.setAttribute('stroke-linecap', 'round');
     
     svg.appendChild(path);
