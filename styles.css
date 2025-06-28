@@ -248,7 +248,18 @@ html {
     border: 3px solid var(--square-border);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     position: relative;
-    z-index: 0;
+}
+
+.board::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--board-bg);
+    border-radius: 15px;
+    z-index: -1;
 }
 
 .square {

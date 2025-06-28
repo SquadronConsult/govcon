@@ -174,7 +174,7 @@ function addSpecialConnections() {
     svg.style.width = '100%';
     svg.style.height = '100%';
     svg.style.pointerEvents = 'none';
-    svg.style.zIndex = '-1'; // Behind squares but above board background
+    svg.style.zIndex = '0'; // Same level as board, but squares have z-index 1
     
     // Draw mountains (ladders)
     Object.entries(MOUNTAINS).forEach(([from, data]) => {
@@ -194,7 +194,8 @@ function addSpecialConnections() {
         }
     });
     
-    board.appendChild(svg);
+    // Insert SVG as first child so squares appear on top
+    board.insertBefore(svg, board.firstChild);
     console.log('Special connections added');
 }
 
