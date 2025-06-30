@@ -2,10 +2,13 @@
   "name": "bureaucratic-mountains",
   "version": "1.0.0",
   "description": "A satirical defense acquisition board game parody of Chutes and Ladders",
-  "main": "index.html",
+  "private": true,
   "scripts": {
-    "start": "npx serve .",
-    "dev": "npx serve . -l 3000"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "game",
@@ -13,7 +16,9 @@
     "defense",
     "satire",
     "web-game",
-    "pwa"
+    "nextjs",
+    "typescript",
+    "webgl"
   ],
   "author": "Defense Acquisition Satire Division",
   "license": "MIT",
@@ -21,7 +26,18 @@
     "type": "git",
     "url": "https://github.com/18bravo/mountains.git"
   },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "framer-motion": "^10.16.0"
+  },
   "devDependencies": {
-    "serve": "^14.2.0"
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0"
   }
 }

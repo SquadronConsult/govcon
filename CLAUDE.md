@@ -12,40 +12,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Install dependencies
 npm install
 
-# Run development server
+# Run development server (with hot reload)
 npm run dev
+
+# Build for production
+npm run build
 
 # Start production server
 npm start
+
+# Run TypeScript type checking
+npm run type-check
+
+# Run linting
+npm run lint
 ```
 
 ## Architecture
 
 ### Technology Stack
-- Pure HTML/CSS/JavaScript (no frameworks for maximum compatibility)
-- Vercel-ready static deployment
+- **Next.js 14** - React framework for production
+- **TypeScript** - Type-safe code throughout
+- **React + SVG** - Crisp, scalable 2D board graphics
+- **Framer Motion** - Smooth player piece animations
+- **CSS3** - Military-industrial themed styling
 - PWA support with offline capabilities
+- Vercel-ready deployment
 
 ### File Structure
-- `index.html` - Game UI with board grid, player controls, and game status
-- `styles.css` - Military-industrial themed styling with 3D elevation effects
-- `script.js` - Game logic including turn management, movement, and special squares
-- `manifest.json` - PWA configuration for installable app
-- `vercel.json` - Deployment configuration
+- `pages/` - Next.js pages (index.tsx, _app.tsx)
+- `components/` - React components (SVGBoard, GameControls, etc.)
+- `hooks/` - Custom React hooks (useGameLogic)
+- `types/` - TypeScript type definitions
+- `constants/` - Game configuration and constants
+- `styles/` - CSS styling
+- `public/` - Static assets (manifest.json, etc.)
 
 ### Key Game Mechanics
 - 10x10 board (squares 1-100) with snake pattern movement
 - Elevation zones: valleys (1-20, 41-60) and mountains (21-40, 61-80, 81-100)
-- Mountains (ladders): 15→35, 28→52, 43→67, 72→91
-- Valleys (chutes): 87→24, 78→45, 65→18, 56→12, 32→8
+- Mountains (ladders): Sole Source Justification, Congressional Earmark, Pentagon Champion, etc.
+- Valleys (chutes): Protest Filed, The CR Hit, Test Failure, DCAA Audit, etc.
 - 2-4 player support with turn-based gameplay
 - LocalStorage for game state persistence
+- **NEW:** Smooth Framer Motion animations for player movement
 
 ### Design Patterns
-- Modular JavaScript with clear separation of concerns
-- CSS 3D transforms for visual elevation effects
-- Responsive design with mobile touch support
-- Smooth animations for piece movement and special square transitions
+- **Modern React Architecture**: Custom hooks, TypeScript interfaces, component composition
+- **SVG Graphics**: Crisp, scalable board with gradients and paths
+- **Reactive State Management**: useGameLogic hook with game state persistence
+- **Responsive Design**: Mobile-first with touch support
+- **Smooth Animations**: Framer Motion for piece movement and special square transitions
+- **Type Safety**: Full TypeScript coverage for maintainable code
 
 ## Development Guidelines
 

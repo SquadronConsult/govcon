@@ -1,18 +1,24 @@
 # Bureaucratic Mountains and Valleys of Death
 
-A satirical defense acquisition board game that parodies the challenges of military procurement through the lens of Chutes and Ladders.
+A satirical **Next.js + TypeScript** board game that parodies the challenges of military procurement through the lens of Chutes and Ladders.
+
+🎮 **[Play Now](http://localhost:3000)** (when running locally)
 
 ## 🎮 Game Overview
 
 Navigate your defense contractor or program manager through the treacherous terrain of military procurement, climbing bureaucratic mountains of success and avoiding valleys of death that can set your project back years.
 
 ### Game Features
-- 2-4 player support
-- 10x10 board with elevation zones
-- Strategic mountains (ladders) and devastating valleys (chutes)
-- Local game state persistence
-- Mobile-responsive design
-- PWA support for offline play
+- **Modern Tech Stack**: Next.js 14, TypeScript, React
+- **Crisp 2D Graphics**: SVG board with gradients and smooth animations
+- **Framer Motion**: Silky smooth player piece animations
+- **2-4 player support** with turn-based gameplay
+- **10x10 board** with realistic elevation zones
+- **Satirical Special Squares**: Real defense acquisition pain points
+- **Type-Safe Code**: Full TypeScript coverage
+- **Game State Persistence**: Never lose your progress
+- **Mobile-responsive design** with touch support
+- **PWA support** for offline play
 
 ## 🚀 Quick Start
 
@@ -30,8 +36,13 @@ npm install
 
 # Start development server
 npm run dev
-
 # Open http://localhost:3000
+
+# Build for production  
+npm run build
+
+# Run type checking
+npm run type-check
 ```
 
 ## 🎯 How to Play
@@ -39,16 +50,17 @@ npm run dev
 1. Select 2-4 players to begin
 2. Roll the dice to move forward
 3. Land on a **Bureaucratic Mountain** to climb up:
-   - Congressional Champion (15→35)
-   - Pentagon Endorsement (28→52)
-   - Industry Partnership (43→67)
-   - Successful Test (72→91)
+   - Sole Source Justification (1→38)
+   - Congressional Earmark (4→14)  
+   - Pentagon Champion (28→84)
+   - Finally got your ATO (71→91)
+   - Presidential Priority (80→100)
 4. Avoid the **Valleys of Death** that send you tumbling:
-   - Budget Cut (87→24)
-   - Requirements Change (78→45)
-   - Competing Priority (65→18)
-   - Failed Milestone Review (56→12)
-   - Compliance Issue (32→8)
+   - Protest Filed (16→6)
+   - The CR Hit (47→26)
+   - Test Failure (49→11)
+   - Incumbent stole your Tech (62→19)
+   - DCAA Audit (98→78)
 5. First to reach square 100 achieves deployment!
 
 ## 🏔️ Board Zones
@@ -59,32 +71,40 @@ npm run dev
 - **Squares 61-80**: Second Bureaucratic Mountain (highest peak)
 - **Squares 81-100**: Deployment Plateau (goal zone)
 
-## 🛠️ Technical Details
+## 🛠️ Technical Stack
 
-- Pure HTML/CSS/JavaScript (no frameworks)
-- CSS 3D transforms for elevation effects
-- Smooth animations for piece movement
-- LocalStorage for game persistence
-- PWA-ready with offline support
+- **Next.js 14** - React framework for production
+- **TypeScript** - Type-safe code throughout  
+- **React + SVG** - Crisp, scalable 2D board graphics
+- **Framer Motion** - Smooth player piece animations
+- **CSS3** - Military-industrial themed styling
+- **LocalStorage** - Game state persistence
+- **PWA-ready** with offline support
 
 ## 📁 Project Structure
 
 ```
 mountains/
-├── index.html      # Game interface
-├── styles.css      # Visual design
-├── script.js       # Game logic
-├── manifest.json   # PWA configuration
-├── vercel.json     # Deployment config
-└── package.json    # Project metadata
+├── pages/           # Next.js pages (index.tsx, _app.tsx)
+├── components/      # React components (SVGBoard, GameControls)
+├── hooks/           # Custom React hooks (useGameLogic)  
+├── types/           # TypeScript type definitions
+├── constants/       # Game configuration and constants
+├── styles/          # CSS styling (globals.css)
+├── public/          # Static assets (manifest.json)
+├── tsconfig.json    # TypeScript configuration
+├── next.config.js   # Next.js configuration
+└── package.json     # Dependencies and scripts
 ```
 
 ## 🎨 Design Philosophy
 
 The game satirizes real defense acquisition challenges through visual metaphors:
-- Mountains made of stacked paperwork and filing cabinets
-- Valleys littered with abandoned prototypes
-- Military-industrial aesthetic with bureaucratic undertones
+- **SVG Mountains**: Clean geometric peaks representing bureaucratic victories
+- **Curved Valleys**: Smooth chutes showing the inevitable fall from grace
+- **Elevation Zones**: Color-coded terrain from valley floors to deployment plateaus
+- **Military-industrial aesthetic**: Dark color scheme with bureaucratic undertones
+- **Authentic Names**: Real defense acquisition pain points as game mechanics
 
 ## 📜 License
 
