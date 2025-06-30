@@ -44,23 +44,12 @@ export const BureaucraticMountainsGame: React.FC = () => {
                 lastProcessedCardId
             });
 
-            const humanPlayer = gameState.players[0]; // The human player
+            // Only show notifications for the human player's cards (not NPCs)
             let shouldShowNotification = false;
 
-            // Show notification if it's the human player drawing the card OR any card that affects the human player
             if (gameState.currentPlayerIndex === 0) {
                 shouldShowNotification = true;
                 console.log('Showing notification: Human player drew card');
-            }
-            // Show notification for cards that affect the human player when drawn by NPCs
-            else if (gameState.lastCardDrawn.targetPlayer === 'highest' && humanPlayer) {
-                const highestPlayer = gameState.players.reduce((highest, current) =>
-                    current.position > highest.position ? current : highest
-                );
-                if (highestPlayer.id === humanPlayer.id) {
-                    shouldShowNotification = true;
-                    console.log('Showing notification: Card affects human player');
-                }
             }
 
             if (shouldShowNotification) {
