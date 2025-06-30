@@ -31,29 +31,15 @@ export const BureaucraticMountainsGame: React.FC = () => {
         isGameActive
     } = useGameLogic();
 
-    // Watch for card draws and show popup
+    // Watch for card draws and show popup - only when player lands on card-drawing squares
     useEffect(() => {
         if (gameState.lastCardDrawn &&
             gameState.lastCardDrawn.id !== lastProcessedCardId &&
             !cardDrawPopup.isVisible) {
 
-            console.log('Card notification check:', {
-                cardId: gameState.lastCardDrawn.id,
-                cardTitle: gameState.lastCardDrawn.title,
-                currentPlayerIndex: gameState.currentPlayerIndex,
-                lastProcessedCardId
-            });
-
-            // Only show notifications for the human player's cards (not NPCs)
-            let shouldShowNotification = false;
-
+            // Only show notifications for the human player and only if they're the current player
             if (gameState.currentPlayerIndex === 0) {
-                shouldShowNotification = true;
-                console.log('Showing notification: Human player drew card');
-            }
-
-            if (shouldShowNotification) {
-                console.log('Displaying card popup for:', gameState.lastCardDrawn.title);
+                console.log('Displaying card popup for human player:', gameState.lastCardDrawn.title);
                 setCardDrawPopup({
                     card: gameState.lastCardDrawn,
                     isVisible: true
@@ -69,12 +55,11 @@ export const BureaucraticMountainsGame: React.FC = () => {
                 // Cleanup timeout if component unmounts
                 return () => clearTimeout(timeoutId);
             } else {
-                console.log('Not showing notification for card:', gameState.lastCardDrawn.title);
-                // Mark card as processed even if not shown to prevent showing later
+                // For NPCs, just mark as processed without showing notification
                 setLastProcessedCardId(gameState.lastCardDrawn.id);
             }
         }
-    }, [gameState.lastCardDrawn]); // Removed currentPlayerIndex from dependencies
+    }, [gameState.lastCardDrawn, gameState.currentPlayerIndex]);
 
     // Clear card notifications when game resets
     useEffect(() => {

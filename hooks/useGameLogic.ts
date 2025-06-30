@@ -841,18 +841,47 @@ export const useGameLogic = () => {
                     if (freshPlayerForCards) {
                         const shouldDrawCard = determineShouldDrawCard({ ...freshPlayerForCards, position: finalPosition });
                         if (shouldDrawCard.draw) {
-                            const card = drawCard(shouldDrawCard.deckType!);
-                            if (card) {
-                                console.log(`Player ${player.name} (ID: ${player.id}) drawing card: ${card.title}`);
-                                addToLog(`${player.name} draws: "${card.title}"`);
+                            // For human player, show immediate notification about landing on card square
+                            if (player.id === 0) {
+                                const squareType = BOARD_CONFIG.folderSquares.includes(finalPosition)
+                                    ? 'folder square'
+                                    : BOARD_CONFIG.mountains[finalPosition]
+                                        ? `${BOARD_CONFIG.mountains[finalPosition].name} (mountain)`
+                                        : BOARD_CONFIG.valleys[finalPosition]
+                                            ? `${BOARD_CONFIG.valleys[finalPosition].name} (valley)`
+                                            : 'card-drawing square';
 
-                                // Set the card as drawn BEFORE resolving it so notification shows
-                                updateGameState({ lastCardDrawn: card });
+                                addToLog(`📍 ${player.name} lands on ${squareType} - drawing from ${shouldDrawCard.deckType} deck!`);
 
-                                // Add a small delay to ensure notification is processed before effects
-                                setTimeout(() => {
-                                    resolveCard(card, { ...freshPlayerForCards, position: finalPosition });
-                                }, 100);
+                                // Draw and show card immediately for human player notification
+                                const card = drawCard(shouldDrawCard.deckType!);
+                                if (card) {
+                                    console.log(`Player ${player.name} (ID: ${player.id}) drawing card: ${card.title}`);
+                                    addToLog(`${player.name} draws: "${card.title}"`);
+
+                                    // Show notification popup immediately for human player
+                                    updateGameState({ lastCardDrawn: card });
+
+                                    // Add delay before resolving effects to let player read the card
+                                    setTimeout(() => {
+                                        resolveCard(card, { ...freshPlayerForCards, position: finalPosition });
+                                    }, 2000); // 2 second delay for human player
+                                }
+                            } else {
+                                // For NPCs, just draw and resolve immediately without notification popup
+                                const card = drawCard(shouldDrawCard.deckType!);
+                                if (card) {
+                                    console.log(`Player ${player.name} (ID: ${player.id}) drawing card: ${card.title}`);
+                                    addToLog(`${player.name} draws: "${card.title}"`);
+
+                                    // NPCs don't trigger notification popup, but still set lastCardDrawn for game state
+                                    updateGameState({ lastCardDrawn: card });
+
+                                    // Resolve immediately for NPCs
+                                    setTimeout(() => {
+                                        resolveCard(card, { ...freshPlayerForCards, position: finalPosition });
+                                    }, 100);
+                                }
                             }
                         }
                     }
