@@ -459,6 +459,54 @@ export const useGameLogic = () => {
         }
     };
 
+    // Resolve effects for cards played from hand (reaction cards)
+    const resolvePlayedCard = (card: EventCard, player: Player) => {
+        const cardType = card.category === 'positive' ? '✨ POSITIVE' : '⚠️ NEGATIVE';
+        addToLog(`🎴 REACTION CARD: ${player.name} played "${card.title}" (${cardType})`);
+
+        // Handle movement
+        if (card.moveSpaces) {
+            const newPosition = Math.max(1, Math.min(BOARD_CONFIG.size, player.position + card.moveSpaces));
+            updatePlayerData(player.id, { position: newPosition });
+            const moveType = card.moveSpaces > 0 ? '⬆️ ADVANCED' : '⬇️ MOVED BACK';
+            addToLog(`📍 ${moveType}: ${player.name} moves ${card.moveSpaces > 0 ? '+' : ''}${card.moveSpaces} spaces to position ${newPosition}`);
+        }
+
+        // Handle token awards
+        if (card.id === 2) { // Congressional Add-On
+            awardProgramFundingToken(player, card.title);
+        }
+
+        // Handle immunities
+        if (card.immunities) {
+            const freshPlayer = gameState.players.find(p => p.id === player.id);
+            if (freshPlayer) {
+                updatePlayerData(player.id, {
+                    immunities: [...(freshPlayer.immunities || []), ...card.immunities]
+                });
+                addToLog(`🛡️ IMMUNITY GAINED: ${player.name} is now immune to ${card.immunities.join(', ')}`);
+            }
+        }
+
+        // Handle special reaction card effects based on playTiming
+        if (card.playTiming) {
+            switch (card.playTiming) {
+                case 'on_move_back':
+                    // Cancel movement back if this was played in response
+                    addToLog(`🛡️ PROTECTION: ${card.title} prevents movement back!`);
+                    break;
+                case 'on_skip_turns':
+                    // Cancel skip turns if this was played in response
+                    addToLog(`🛡️ PROTECTION: ${card.title} prevents turn skipping!`);
+                    break;
+                case 'on_negative_card':
+                    // Cancel negative card effects if this was played in response
+                    addToLog(`🛡️ PROTECTION: ${card.title} negates negative card effects!`);
+                    break;
+            }
+        }
+    };
+
     // Award Program Funding Token
     const awardProgramFundingToken = (player: Player, reason: string) => {
         // Get fresh player data to avoid stale state issues
@@ -537,15 +585,23 @@ export const useGameLogic = () => {
         const currentPlayer = gameState.players[gameState.currentPlayerIndex];
         const card = (currentPlayer.handCards || []).find(c => c.id === cardId);
 
-        if (!card) return false;
+        if (!card || card.cardType !== 'reaction') {
+            console.log('Cannot play card:', card ? 'Not a reaction card' : 'Card not found');
+            return false;
+        }
 
         // Remove card from hand
         const updatedHand = (currentPlayer.handCards || []).filter(c => c.id !== cardId);
         updatePlayerData(currentPlayer.id, { handCards: updatedHand });
 
-        // Resolve card effect
-        resolveCard(card, currentPlayer);
-        addToLog(`${currentPlayer.name} plays "${card.title}".`);
+        // Resolve card effect - but mark it as played from hand
+        resolvePlayedCard(card, currentPlayer);
+        addToLog(`🎴 CARD PLAYED: ${currentPlayer.name} plays "${card.title}" from hand.`);
+
+        // Move card to discard pile
+        const updatedDecks = { ...gameState.decks };
+        updatedDecks.discardPile.push(card);
+        updateGameState({ decks: updatedDecks });
 
         return true;
     }, [gameState]);
@@ -567,8 +623,18 @@ export const useGameLogic = () => {
                 }
                 break;
             case 'discard_card':
+                // Remove the chosen card from hand and add the new card
                 const updatedHand = (player.handCards || []).filter(c => c.id !== choice.id);
-                updatePlayerData(player.id, { handCards: [...updatedHand, choice] });
+                const newCard = ALL_CARDS.find(c => c.id === gameState.pendingChoice!.cardId);
+                if (newCard) {
+                    updatePlayerData(player.id, { handCards: [...updatedHand, newCard] });
+                    addToLog(`${player.name} discards "${choice.title}" and adds "${newCard.title}" to hand.`);
+
+                    // Move discarded card to discard pile
+                    const updatedDecks = { ...gameState.decks };
+                    updatedDecks.discardPile.push(choice);
+                    updateGameState({ decks: updatedDecks });
+                }
                 break;
         }
 

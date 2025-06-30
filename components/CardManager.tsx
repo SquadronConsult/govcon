@@ -34,20 +34,52 @@ export const CardManager: React.FC<CardManagerProps> = ({
             </div>
             <p className="card-effect">{card.effect}</p>
             {isInHand && card.cardType === 'reaction' && (
-                <button
-                    className="play-card-btn"
-                    onClick={() => onPlayCard(card.id)}
-                    disabled={!canPlayCard(card)}
-                >
-                    Play Card
-                </button>
+                <div className="card-actions">
+                    <button
+                        className={`play-card-btn ${!canPlayCard(card) ? 'disabled' : ''}`}
+                        onClick={() => onPlayCard(card.id)}
+                        disabled={!canPlayCard(card)}
+                        title={!canPlayCard(card) ? 'Cannot play this card right now' : `Play timing: ${card.playTiming || 'any time'}`}
+                    >
+                        🎴 Play Card
+                    </button>
+                    {card.playTiming && (
+                        <div className="play-timing">
+                            <small>📅 Timing: {card.playTiming.replace(/_/g, ' ')}</small>
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );
 
     const canPlayCard = (card: EventCard): boolean => {
-        // Logic to determine if a reaction card can be played based on current game state
-        // For now, assume all reaction cards can be played
+        // Only reaction cards can be played from hand
+        if (card.cardType !== 'reaction') return false;
+
+        // Check if it's the current player's turn
+        if (!currentPlayer) return false;
+
+        // Basic validation - reaction cards can generally be played during your turn
+        // More specific timing validation would depend on the card's playTiming property
+        if (card.playTiming) {
+            switch (card.playTiming) {
+                case 'before_roll':
+                    // Can be played before rolling dice
+                    return true;
+                case 'on_move_back':
+                case 'on_skip_turns':
+                case 'on_negative_card':
+                    // These are reactive - can be played in response to events
+                    return true;
+                case 'before_last_square':
+                    // Can be played when approaching the last square
+                    return currentPlayer.position >= 95; // Close to winning
+                default:
+                    return true;
+            }
+        }
+
         return true;
     };
 
