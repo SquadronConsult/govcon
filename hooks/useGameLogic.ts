@@ -617,7 +617,13 @@ export const useGameLogic = () => {
             console.log(`Starting turn for ${player.name}`);
 
             // Clear dice value at start of turn so UI shows fresh state
-            updateGameState({ diceValue: 0 });
+            // Only clear if we're starting a new penalty upkeep phase
+            if (gameState.gamePhase === 'penalty_upkeep') {
+                updateGameState({
+                    diceValue: 0
+                    // Don't clear lastCardDrawn here - let it persist until next card is drawn
+                });
+            }
 
             // Phase 1: Penalty Upkeep
             let shouldSkipTurn = false;
@@ -669,7 +675,7 @@ export const useGameLogic = () => {
             diceValue = Math.floor(Math.random() * diceType) + 1;
 
             // Update dice value immediately so UI shows current roll
-            updateGameState({ diceValue });
+            updateGameState({ diceValue, gamePhase: 'move_token' }); // Set phase to indicate rolling is done
 
             if (diceModifier?.diceModifier?.type === 'even_only' && diceValue % 2 !== 0) {
                 addToLog(`${player.name} rolled ${diceValue} but can only move on even rolls. No movement.`);
@@ -685,6 +691,20 @@ export const useGameLogic = () => {
 
             addToLog(`${player.name} rolled ${diceValue} on a d${diceType}.`);
 
+            // Add pause after rolling to show the result before moving
+            // For human players, pause longer to see the roll
+            const pauseTime = player.id === 0 ? 1500 : 800; // 1.5s for human, 0.8s for NPCs
+
+            setTimeout(() => {
+                continueAfterRoll(player, diceValue);
+            }, pauseTime);
+
+            // Don't continue immediately - use timeout for pause
+            return; // Exit early, timeout will continue the turn
+        };
+
+        // Continue turn execution after dice roll pause
+        const continueAfterRoll = (player: Player, diceValue: number) => {
             // Phase 3: Move Token
             if (diceValue > 0) {
                 // Get fresh player data
@@ -757,9 +777,16 @@ export const useGameLogic = () => {
                         if (shouldDrawCard.draw) {
                             const card = drawCard(shouldDrawCard.deckType!);
                             if (card) {
+                                console.log(`Player ${player.name} (ID: ${player.id}) drawing card: ${card.title}`);
                                 addToLog(`${player.name} draws: "${card.title}"`);
-                                resolveCard(card, { ...freshPlayerForCards, position: finalPosition });
+
+                                // Set the card as drawn BEFORE resolving it so notification shows
                                 updateGameState({ lastCardDrawn: card });
+
+                                // Add a small delay to ensure notification is processed before effects
+                                setTimeout(() => {
+                                    resolveCard(card, { ...freshPlayerForCards, position: finalPosition });
+                                }, 100);
                             }
                         }
                     }
@@ -771,7 +798,8 @@ export const useGameLogic = () => {
             const nextPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
             updateGameState({
                 currentPlayerIndex: nextPlayerIndex,
-                gamePhase: 'penalty_upkeep'
+                gamePhase: 'penalty_upkeep',
+                diceValue: 0  // Clear dice for next player
             });
         };
 

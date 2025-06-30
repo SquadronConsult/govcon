@@ -66,7 +66,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                         <button
                             className="dice-btn-compact"
                             onClick={handleRollDice}
-                            disabled={isRolling}
+                            disabled={isRolling || gameState.gamePhase === 'move_token'}
                         >
                             <div className={`dice-compact ${isRolling ? 'rolling' : ''}`}>
                                 <span className="dice-value-compact">
@@ -74,7 +74,9 @@ export const GameControls: React.FC<GameControlsProps> = ({
                                 </span>
                             </div>
                             <span className="dice-label-compact">
-                                {isRolling ? 'Rolling...' : 'Roll Dice'}
+                                {isRolling ? 'Rolling...' :
+                                    gameState.gamePhase === 'move_token' ? 'Moving...' :
+                                        'Roll Dice'}
                             </span>
                         </button>
                     ) : (

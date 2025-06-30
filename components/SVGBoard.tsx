@@ -251,6 +251,44 @@ export const SVGBoard: React.FC<SVGBoardProps> = ({ gameState, boardConfig, onSq
                                 style={{ cursor: onSquareClick ? 'pointer' : 'default' }}
                             />
 
+                            {/* Folder icon for folder squares */}
+                            {BOARD_CONFIG.folderSquares.includes(square.number) && (
+                                <text
+                                    x={pos.x + SQUARE_SIZE / 2}
+                                    y={pos.y + 10}
+                                    textAnchor="middle"
+                                    fontSize="16"
+                                    fill="#3498db"
+                                >
+                                    📁
+                                </text>
+                            )}
+
+                            {/* Mountain/Valley icons */}
+                            {square.specialType === 'mountain' && (
+                                <text
+                                    x={pos.x + SQUARE_SIZE / 2}
+                                    y={pos.y + 10}
+                                    textAnchor="middle"
+                                    fontSize="16"
+                                    fill="#1565C0"
+                                >
+                                    ⛰️
+                                </text>
+                            )}
+
+                            {square.specialType === 'valley' && (
+                                <text
+                                    x={pos.x + SQUARE_SIZE / 2}
+                                    y={pos.y + 10}
+                                    textAnchor="middle"
+                                    fontSize="16"
+                                    fill="#8B4513"
+                                >
+                                    🕳️
+                                </text>
+                            )}
+
                             {/* Square number */}
                             <text
                                 x={pos.x + SQUARE_SIZE / 2}

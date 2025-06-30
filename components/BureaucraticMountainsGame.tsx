@@ -37,26 +37,34 @@ export const BureaucraticMountainsGame: React.FC = () => {
             gameState.lastCardDrawn.id !== lastProcessedCardId &&
             !cardDrawPopup.isVisible) {
 
+            console.log('Card notification check:', {
+                cardId: gameState.lastCardDrawn.id,
+                cardTitle: gameState.lastCardDrawn.title,
+                currentPlayerIndex: gameState.currentPlayerIndex,
+                lastProcessedCardId
+            });
+
             const humanPlayer = gameState.players[0]; // The human player
             let shouldShowNotification = false;
 
-            // Show notification if it's the human player's turn
+            // Show notification if it's the human player drawing the card OR any card that affects the human player
             if (gameState.currentPlayerIndex === 0) {
                 shouldShowNotification = true;
+                console.log('Showing notification: Human player drew card');
             }
-            // Show notification for cards that affect all players
-            else if (gameState.lastCardDrawn.targetPlayer === 'all') {
-                shouldShowNotification = true;
-            }
-            // Show notification for cards that target the highest player when human is highest
+            // Show notification for cards that affect the human player when drawn by NPCs
             else if (gameState.lastCardDrawn.targetPlayer === 'highest' && humanPlayer) {
                 const highestPlayer = gameState.players.reduce((highest, current) =>
                     current.position > highest.position ? current : highest
                 );
-                shouldShowNotification = highestPlayer.id === humanPlayer.id;
+                if (highestPlayer.id === humanPlayer.id) {
+                    shouldShowNotification = true;
+                    console.log('Showing notification: Card affects human player');
+                }
             }
 
             if (shouldShowNotification) {
+                console.log('Displaying card popup for:', gameState.lastCardDrawn.title);
                 setCardDrawPopup({
                     card: gameState.lastCardDrawn,
                     isVisible: true
@@ -71,9 +79,21 @@ export const BureaucraticMountainsGame: React.FC = () => {
 
                 // Cleanup timeout if component unmounts
                 return () => clearTimeout(timeoutId);
+            } else {
+                console.log('Not showing notification for card:', gameState.lastCardDrawn.title);
+                // Mark card as processed even if not shown to prevent showing later
+                setLastProcessedCardId(gameState.lastCardDrawn.id);
             }
         }
-    }, [gameState.lastCardDrawn, gameState.currentPlayerIndex, gameState.players]); // Added players to dependencies
+    }, [gameState.lastCardDrawn]); // Removed currentPlayerIndex from dependencies
+
+    // Clear card notifications when game resets
+    useEffect(() => {
+        if (!gameState.isGameActive) {
+            setLastProcessedCardId(null);
+            dismissCardPopup();
+        }
+    }, [gameState.isGameActive]);
 
     const handleSquareClick = (squareNumber: number) => {
         console.log(`Clicked square ${squareNumber}`);
